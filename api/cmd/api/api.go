@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
@@ -55,8 +56,9 @@ func main() {
 	ticker := time.NewTicker(600 * time.Second)
 
 	internalUser, err := userRepo.GetByUserName(ctx, "internal-clock")
+	log.Printf("Error: %v", err)
 	if err != nil {
-		internalUser, err = userRepo.Create(ctx, "internal-clock", []byte("111111111"))
+		internalUser, err = userRepo.Create(ctx, "internal-clock",  json.RawMessage([]byte("{}")), []byte("111111111"))
 		if err != nil {
 			log.Fatal(err)
 		}

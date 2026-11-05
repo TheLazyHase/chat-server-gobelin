@@ -149,7 +149,7 @@ func (h userHandler) Create(writer http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	user, err := h.userRepo.Create(ctx, req.Username, hash)
+	user, err := h.userRepo.Create(ctx, req.Username, json.RawMessage([]byte("{}")), hash)
 	if err != nil {
 		log.Printf("Error creating user: %s", err.Error())
 		writer.WriteHeader(http.StatusInternalServerError)
