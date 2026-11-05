@@ -1,0 +1,17 @@
+But de la demande & contexte
+============================
+
+Le front doit savoir à quel channel appartient chaque message reçu ou relu.
+
+Proposition technique
+=====================
+
+Ajouter `channel_id` à l’objet message renvoyé par les routes GET et par les événements WebSocket.
+
+Utilisation approximative
+==========================
+
+À chaque affichage ou réception de message.
+
+Problèmes potentiels et/ou effets secondaires
+============================================

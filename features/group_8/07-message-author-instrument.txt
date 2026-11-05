@@ -1,0 +1,17 @@
+But de la demande & contexte
+============================
+
+Chaque message doit être joué avec l’instrument de son auteur.
+
+Proposition technique
+=====================
+
+Ajouter `user_instrument_id` à l’objet message renvoyé en GET et par WebSocket.
+
+Utilisation approximative
+==========================
+
+Pour chaque message joué ou affiché.
+
+Problèmes potentiels et/ou effets secondaires
+============================================

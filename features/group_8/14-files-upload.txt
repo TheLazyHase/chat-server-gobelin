@@ -1,0 +1,17 @@
+But de la demande & contexte
+============================
+
+Les images, vidéos et autres fichiers doivent pouvoir être envoyés avant leur association à un message.
+
+Proposition technique
+=====================
+
+Créer `POST /files` en `multipart/form-data`, acceptant plusieurs fichiers. Enregistrer le propriétaire et renvoyer pour chacun `id`, `kind`, `mime_type`, `filename` et `size_bytes`. Déterminer ou vérifier `kind` pour chaque fichier, afin qu’un même envoi puisse contenir différents types.
+
+Utilisation approximative
+==========================
+
+À chaque sélection de pièces jointes, avant l’envoi du message.
+
+Problèmes potentiels et/ou effets secondaires
+============================================

@@ -1,0 +1,17 @@
+But de la demande & contexte
+============================
+
+Après une coupure réseau, le front doit retrouver les messages manqués et reconstruire la partition.
+
+Proposition technique
+=====================
+
+À la reconnexion WebSocket, renvoyer l’historique conservé des channels auxquels l’utilisateur a accès, puis signaler la fin de la synchronisation. Prévoir un identifiant ou curseur de dernier message reçu pour permettre plus tard un rattrapage limité aux nouveaux messages.
+
+Utilisation approximative
+==========================
+
+À chaque reconnexion, notamment lors des changements de réseau sur mobile.
+
+Problèmes potentiels et/ou effets secondaires
+============================================

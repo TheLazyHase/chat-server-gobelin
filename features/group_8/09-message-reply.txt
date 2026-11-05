@@ -1,0 +1,19 @@
+But de la demande & contexte
+============================
+
+Un utilisateur doit pouvoir répondre à un message précis dans le même channel.
+
+Proposition technique
+=====================
+
+Ajouter le champ facultatif `reply_to_message_id` à `POST /channel/message` et à l’objet message renvoyé. Sa valeur est un ID numérique ou `null`.
+
+Utilisation approximative
+==========================
+
+À chaque réponse ciblée ; absent pour un message ordinaire.
+
+Problèmes potentiels et/ou effets secondaires
+============================================
+
+Le message cité peut être supprimé plus tard par la limite d’historique.

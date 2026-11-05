@@ -1,0 +1,17 @@
+But de la demande & contexte
+============================
+
+Un utilisateur doit pouvoir changer son instrument ou certaines informations de son compte après l’inscription.
+
+Proposition technique
+=====================
+
+Créer `PATCH /me`, authentifié, qui accepte uniquement les champs fournis : `instrument_id`, `username` et `password`. Valider chaque champ et renvoyer le profil mis à jour, sans le mot de passe.
+
+Utilisation approximative
+==========================
+
+Occasionnelle, depuis les paramètres du compte.
+
+Problèmes potentiels et/ou effets secondaires
+============================================

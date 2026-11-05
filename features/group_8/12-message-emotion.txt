@@ -1,0 +1,17 @@
+But de la demande & contexte
+============================
+
+L’émotion choisie avant l’envoi détermine la position, la forme et une partie du son du message.
+
+Proposition technique
+=====================
+
+Ajouter `emotion` à la création d’un message et à toutes ses représentations en GET et par WebSocket. Valider sa valeur parmi les émotions convenues avec le front : joie, tristesse, colère et curiosité.
+
+Utilisation approximative
+==========================
+
+Pour chaque message.
+
+Problèmes potentiels et/ou effets secondaires
+============================================

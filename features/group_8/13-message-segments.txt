@@ -1,0 +1,17 @@
+But de la demande & contexte
+============================
+
+Les hésitations et pauses pendant la rédaction ou la parole doivent pouvoir devenir des éléments de la partition.
+
+Proposition technique
+=====================
+
+Ajouter un champ facultatif `segments` à la création et à la lecture d’un message. Exemple : `[{"type":"text","content":"Bonjour"},{"type":"pause","duration_ms":600},{"type":"text","content":"à tous"}]`. Conserver aussi `content` avec le texte complet. Vérifier que l’assemblage des segments de texte correspond à `content`.
+
+Utilisation approximative
+==========================
+
+Chaque message
+
+Problèmes potentiels et/ou effets secondaires
+============================================

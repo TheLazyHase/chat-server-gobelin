@@ -1,0 +1,17 @@
+But de la demande & contexte
+============================
+
+Le front a besoin d’un identifiant stable et unique pour suivre chaque message et les événements temps réel.
+
+Proposition technique
+=====================
+
+Ajouter un champ `uuid` généré par le serveur à chaque message. Le renvoyer dans les réponses GET et dans les événements WebSocket, tout en conservant l’`id` numérique existant.
+
+Utilisation approximative
+==========================
+
+Très souvent, pour chaque message affiché ou reçu en temps réel.
+
+Problèmes potentiels et/ou effets secondaires
+============================================

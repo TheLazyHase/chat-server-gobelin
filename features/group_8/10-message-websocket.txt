@@ -1,0 +1,17 @@
+But de la demande & contexte
+============================
+
+Les messages doivent être envoyés et reçus sans recharger la conversation.
+
+Proposition technique
+=====================
+
+Ajouter une connexion WebSocket authentifiée par channel. Prévoir un événement de création de message utilisant les mêmes validations que `POST /channel/message`, puis diffuser le message créé aux membres autorisés du channel. Définir un format d’événement commun avec le front.
+
+Utilisation approximative
+==========================
+
+Connexion active pendant l’utilisation du chat, événements à chaque nouveau message.
+
+Problèmes potentiels et/ou effets secondaires
+============================================
