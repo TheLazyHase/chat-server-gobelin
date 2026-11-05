@@ -1,0 +1,25 @@
+But de la demande & contexte
+============================
+
+Le but est d'offrir aux utilisateurs la possibilité d'envoyer des GIF dans leurs conversations afin de rendre les échanges plus dynamiques et expressifs.
+
+Proposition technique
+=====================
+
+Mise en place d'un endpoint POST /gif qui prend en paramètres :
+L'identifiant de la conversation
+Le contenu du GIF (URL).
+Le GIF devra être associé à la conversation et à l'utilisateur qui l'a envoyé.
+
+Utilisation approximative
+==========================
+
+Envoi de GIF directement dans une conversation, avec la possibilité de sélectionner un GIF depuis une bibliothèque intégrée ou d'en envoyer un depuis un fichier externe.
+Les GIF devront être affichés directement dans la conversation.
+
+Problèmes potentiels et/ou effets secondaires
+============================================
+
+Limiter la taille des GIF envoyés afin d'éviter une surcharge du stockage et de la bande passante.
+Vérifier les formats de fichiers autorisés.
+Prévoir la gestion des GIF indisponibles ou dont le chargement échoue.

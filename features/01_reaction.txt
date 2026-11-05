@@ -1,0 +1,27 @@
+But de la demande & contexte
+============================
+
+Le but est d'offrir aux utilisateurs la possibilité de réagir aux messages avec un emoji, afin de rendre les échanges plus interactifs et expressifs. Cette fonctionnalité permettrait de réagir rapidement à un message sans avoir besoin d'envoyer une réponse supplémentaire.
+
+Proposition technique
+=====================
+
+Mise en place d'un endpoint POST /reaction qui prend en paramètres :
+L'identifiant du message auquel on souhaite réagir.
+Le contenu de la réaction (emoji).
+La réaction devra être associée au message concerné et à l'utilisateur qui l'a envoyée.
+
+Utilisation approximative
+==========================
+
+Envoi d'une réaction limitée à l'utilisation d'un seul emoji par réaction.
+Les utilisateurs pourront ainsi exprimer rapidement une émotion ou un avis sur un message, sans nécessairement avoir à rédiger une réponse.
+
+Problèmes potentiels et/ou effets secondaires
+============================================
+
+Vérifier qu'un message ne puisse recevoir que des réactions valides.
+Définir le comportement lorsqu'un utilisateur souhaite modifier ou supprimer sa réaction.
+Éviter les réactions multiples identiques d'un même utilisateur sur un même message.
+Prévoir la gestion de plusieurs réactions différentes sur un même message.
+S'assurer que seules les personnes autorisées puissent réagir aux messages.
