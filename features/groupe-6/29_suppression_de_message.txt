@@ -1,0 +1,26 @@
+But de la demande & contexte
+============================
+
+Un utilisateur doit pouvoir supprimer un message qu'il a envoyé, et le propriétaire d'un serveur doit pouvoir supprimer un message de ce serveur. Le message doit disparaître en direct chez les autres. Dépend de 04_messages_temps_reel et de l'identifiant demandé dans 05_historique_et_rattrapage.
+
+Proposition technique
+=====================
+
+DELETE /channel/message/{id} : supprime définitivement le message et son émotion de message_emotion.
+
+Réservé à l'auteur du message et, dans un channel de serveur, au propriétaire du serveur : 403 pour un autre utilisateur du channel, 404 sans accès au channel.
+
+Envoyer {"type":"message_deleted","channel":4,"message_id":12} sur le WebSocket aux abonnés du channel.
+
+Utilisation approximative
+==========================
+
+Occasionnel : une faible part des messages envoyés.
+
+Probléme potentiels et/ou effets secondaires
+============================================
+
+La suppression est définitive. Les channels globaux n'ont pas de propriétaire : seul l'auteur peut y supprimer ses messages.
+Le rattrapage par after_id de 05_historique_et_rattrapage ne signale pas les suppressions : un message supprimé pendant une coupure réseau reste affiché jusqu'au rechargement des messages concernés.
+Les réponses restent, avec reply_to nul comme prévu dans 06_reponses_a_un_message. Elles ne comptent donc plus dans 26_interactions_entre_utilisateurs.
+Les scores et les statistiques des périodes passées baissent, voir 25_stats_dans_le_temps.
