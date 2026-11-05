@@ -1,0 +1,18 @@
+But de la demande & contexte
+============================
+
+Dans notre application de chat, les users doivent pouvoir upload des fichiers (img) pour changer leur photo de profile
+Proposition technique
+=====================
+
+Stocker en db l'url de l'image stockée sur le serveur ou sur un cdn tiers
+
+Utilisation approximative
+==========================
+
+Une fois au login
+
+Probléme potentiels et/ou effets secondaires
+============================================
+
+Serveur surchargé niveau stockage 
