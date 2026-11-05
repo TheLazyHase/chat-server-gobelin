@@ -1,0 +1,27 @@
+But de la demande & contexte
+============================
+
+Un utilisateur doit pouvoir afficher son état sur son profil (en ligne, absent, ne pas déranger, invisible) et voir celui des autres en direct. Dépend de 04_messages_temps_reel, ainsi que de 01_serveurs et 08_demandes_d_ami pour savoir qui voit l'état.
+
+Proposition technique
+=====================
+
+Ajouter à user un champ status, parmi "online", "away", "dnd" et "invisible", avec "online" par défaut.
+
+PATCH /me avec {"status":"dnd"} : change l'état choisi, conservé après une déconnexion. Valeur inconnue : 400.
+
+Ajouter à GET /me le champ status, et aux utilisateurs renvoyés (amis, membres d'un serveur) un champ presence : "online", "away", "dnd" ou "offline". Un utilisateur sans connexion WebSocket ouverte ou en "invisible" apparaît en "offline".
+
+Envoyer {"type":"presence_changed","user_id":3,"presence":"dnd"} sur le WebSocket à ses amis et aux membres de ses serveurs, à chaque changement.
+
+Utilisation approximative
+==========================
+
+Changement d'état rare. Un événement à chaque connexion ou déconnexion, envoyé à de nombreux destinataires, donc assez fréquent.
+
+Probléme potentiels et/ou effets secondaires
+============================================
+
+L'utilisateur peut avoir plusieurs onglets : il ne passe en "offline" qu'à la fermeture de sa dernière connexion. Prévoir un court délai avant de l'annoncer, pour qu'un rechargement de page ne produise pas de faux départ.
+Un utilisateur "invisible" ne doit jamais être distingué d'un utilisateur "offline" par les autres : seul GET /me renvoie son état choisi.
+"dnd" ne bloque pas les messages, c'est au client de couper ses notifications.
