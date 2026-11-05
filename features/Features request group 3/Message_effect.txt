@@ -1,0 +1,19 @@
+Goal of the request
+===================
+
+Let users change the font, effect or mood of a message, and keep track of who put which effect on which message.
+
+Technical proposition
+=====================
+
+Add a "message_effect" table linking a user and a message, with the font, the effect, the mood and a date.
+
+Approximate frequency of use
+============================
+
+High, several times per minute in an active debate
+
+Potential problem / side effect of note
+=======================================
+
+Two users can change the same message at the same time, so we need a rule to decide which effect is shown. Users could also spam it.

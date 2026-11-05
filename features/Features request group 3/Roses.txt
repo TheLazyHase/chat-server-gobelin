@@ -1,0 +1,19 @@
+Goal of the request
+===================
+
+Show a rose in each debate. When people agree, the stem grows and the flower blooms little by little. When they start to disagree, thorns appear on the stem.
+
+Technical proposition
+=====================
+
+Add a "rose" table linked to a debate, with the stem growth, the bloom, the number of thorns and a state (bud, blooming, thorny, withered). It is updated from the agree / disagree on the messages.
+
+Approximate frequency of use
+============================
+
+High in an active debate, updated each time someone gives an opinion and read each time the debate is displayed
+
+Potential problem / side effect of note
+=======================================
+
+The stored values can get out of sync with the opinions. Without smoothing, the flower could open and close all the time.

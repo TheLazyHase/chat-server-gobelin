@@ -1,0 +1,19 @@
+Goal of the request
+===================
+
+Let users react to anonymous ideas.
+
+Technical proposition
+=====================
+
+Add an "idea_reaction" table linking a user and an idea, with a type of reaction and a date. Only one reaction per user per idea.
+
+Approximate frequency of use
+============================
+
+Medium, mostly just after an idea is posted
+
+Potential problem / side effect of note
+=======================================
+
+The reactions must not let people find who wrote the idea, since the author is supposed to stay hidden.
