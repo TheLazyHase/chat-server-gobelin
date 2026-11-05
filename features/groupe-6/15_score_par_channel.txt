@@ -1,0 +1,19 @@
+But de la demande & contexte
+============================
+
+Afficher le score d'émotion d'un channel, tous utilisateurs confondus. Dépend de 12_detection_emotion_message.
+
+Proposition technique
+=====================
+
+GET /channel/{id}/emotions : additionne les valeurs de message_emotion du channel. Même format de réponse que 13_score_global_utilisateur. Réservé aux utilisateurs qui ont accès au channel.
+
+Utilisation approximative
+==========================
+
+À chaque ouverture de la page de statistiques d'un channel, donc faible.
+
+Probléme potentiels et/ou effets secondaires
+============================================
+
+Dans un channel à deux ou trois personnes, ce score permet presque de déduire celui de chacune.

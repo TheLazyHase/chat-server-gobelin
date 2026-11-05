@@ -1,0 +1,23 @@
+But de la demande & contexte
+============================
+
+Un utilisateur doit pouvoir se déconnecter, et rester connecté après un rechargement de la page. Aujourd'hui le JWT expire après 60 minutes et rien ne permet de l'invalider avant.
+
+Proposition technique
+=====================
+
+POST /logout : invalide le token utilisé, par exemple avec une liste de tokens révoqués jusqu'à leur expiration, et ferme ses connexions WebSocket.
+
+POST /token/refresh : renvoie un nouveau JWT à partir d'un token encore valide, pour ne pas renvoyer l'utilisateur au login toutes les 60 minutes.
+
+Une réponse 401 sur un token expiré ou révoqué, pour que le client revienne au formulaire de connexion.
+
+Utilisation approximative
+==========================
+
+Déconnexion rare. Renouvellement environ une fois par heure et par session active.
+
+Probléme potentiels et/ou effets secondaires
+============================================
+
+Vérifier la liste de révocation ajoute une lecture à chaque requête authentifiée. Un token volé pourrait être renouvelé sans fin : il faut prévoir une durée maximale de session.

@@ -1,0 +1,23 @@
+But de la demande & contexte
+============================
+
+Pouvoir mettre des tags sur un serveur pour décrire son sujet. Dépend de 01_serveurs.
+
+Proposition technique
+=====================
+
+Ajouter une table server_tag (server_id, tag), avec un tag unique par serveur sans tenir compte de la casse, de 32 caractères au plus.
+
+Ajouter un champ "tags" au serveur renvoyé par GET /server.
+
+PUT /server/{id}/tags avec {"tags":["jeux","france"]} : remplace la liste. Réservé au propriétaire. 20 tags au plus.
+
+Utilisation approximative
+==========================
+
+Écriture rare. Lecture avec la liste des serveurs.
+
+Probléme potentiels et/ou effets secondaires
+============================================
+
+Sans liste commune, plusieurs variantes d'un même tag peuvent coexister ("jeu", "jeux").

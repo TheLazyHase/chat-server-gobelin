@@ -1,0 +1,24 @@
+But de la demande & contexte
+============================
+
+Pouvoir corriger ou retirer une définition du dictionnaire d'un serveur, et que tous les membres voient les changements sans recharger. Dépend de 07_dictionnaire_par_serveur.
+
+Proposition technique
+=====================
+
+PATCH /server/{id}/definition/{definition_id} avec {"term":"...","definition":"..."} : modifie la définition. Terme déjà défini : 409.
+DELETE /server/{id}/definition/{definition_id} : supprime la définition.
+
+Réservé à l'auteur de la définition et au propriétaire du serveur, 403 pour les autres membres.
+
+Envoyer {"type":"definitions_changed","server":1} sur le WebSocket aux membres à chaque ajout, modification ou suppression. Le client relit alors la liste.
+
+Utilisation approximative
+==========================
+
+Occasionnel.
+
+Probléme potentiels et/ou effets secondaires
+============================================
+
+Il n'y a pas d'historique : une définition modifiée ou supprimée est perdue.

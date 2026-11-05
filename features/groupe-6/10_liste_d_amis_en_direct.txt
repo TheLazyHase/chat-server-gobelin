@@ -1,0 +1,19 @@
+But de la demande & contexte
+============================
+
+Une demande reçue, acceptée ou un ami retiré doit apparaître sans recharger la page. Dépend de 04_messages_temps_reel et 08_demandes_d_ami.
+
+Proposition technique
+=====================
+
+Envoyer un événement {"type":"friends_changed"} sur le WebSocket aux deux personnes concernées, à chaque changement. Il ne contient rien d'autre : le client relit GET /friend.
+
+Utilisation approximative
+==========================
+
+À chaque changement de relation, donc faible.
+
+Probléme potentiels et/ou effets secondaires
+============================================
+
+Il faut un canal propre à chaque utilisateur, et pas seulement par channel. Ce canal resservira pour d'autres notifications.

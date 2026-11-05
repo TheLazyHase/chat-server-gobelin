@@ -1,0 +1,25 @@
+But de la demande & contexte
+============================
+
+Les messages doivent arriver en direct dans un channel, sans interroger GET /channel/message en boucle. La doc indique que le WebSocket est "To be implemented" : voici ce dont nous avons besoin.
+
+Proposition technique
+=====================
+
+Connexion WebSocket authentifiée avec le JWT.
+
+Le client s'abonne à un channel : {"type":"subscribe","channel":4}. Refusé s'il n'y a pas accès.
+
+Le serveur envoie chaque nouveau message aux abonnés du channel, après son écriture en base : {"type":"message","channel":4,"message":{...}}, avec le même contenu que GET /channel/message.
+
+Ajouter à POST /channel/message un champ optionnel client_message_id (UUID choisi par le client). Un renvoi avec le même identifiant redonne le message existant au lieu d'en créer un second.
+
+Utilisation approximative
+==========================
+
+Une connexion par onglet ouvert, et un événement par message envoyé : c'est l'usage principal, donc fréquent.
+
+Probléme potentiels et/ou effets secondaires
+============================================
+
+Le client perd les messages envoyés pendant une coupure : voir 05_historique_et_rattrapage. Il faut couper ou revérifier une connexion quand son JWT expire, et quand l'utilisateur n'a plus accès au channel.

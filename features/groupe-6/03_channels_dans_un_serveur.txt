@@ -1,0 +1,23 @@
+But de la demande & contexte
+============================
+
+POST /channel crée un channel global. Nous avons besoin de créer des channels à l'intérieur d'un serveur, que seuls ses membres peuvent voir. Dépend de la demande 01_serveurs.
+
+Proposition technique
+=====================
+
+Ajouter un champ server_id, nul par défaut, à la table des channels.
+
+POST /server/{id}/channel avec {"name":"annonces"} : crée le channel. Réservé au propriétaire du serveur. Nom déjà pris dans ce serveur, sans tenir compte de la casse : 409.
+
+GET /server/{id}/channel : liste les channels du serveur, pour ses membres. Non-membre : 404.
+
+Utilisation approximative
+==========================
+
+Création rare. Liste lue à chaque ouverture d'un serveur.
+
+Probléme potentiels et/ou effets secondaires
+============================================
+
+POST /channel/enter permet d'entrer dans un channel avec son seul nom : il doit refuser un channel de serveur à un non-membre, et lire ou écrire dans ce channel aussi. Le nom seul ne suffit plus à identifier un channel, car deux serveurs peuvent avoir un "general".

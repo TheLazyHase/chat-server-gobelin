@@ -1,0 +1,27 @@
+But de la demande & contexte
+============================
+
+Afficher le score d'émotion d'un utilisateur, sur l'ensemble de ses messages, tous serveurs confondus. Dépend de 12_detection_emotion_message.
+
+Proposition technique
+=====================
+
+GET /user/{id}/emotions, qui additionne les valeurs de message_emotion.
+
+Format de réponse, repris par toutes les demandes de score :
+{
+  "message_count": 120,
+  "emotions": {"joy":34,"fear":5,"sadness":8,"anger":3,"surprise":6,"disgust":1},
+  "polarity": {"positive":50,"negative":20}
+}
+
+Utilisation approximative
+==========================
+
+À chaque ouverture d'un profil, donc faible à moyenne.
+
+Probléme potentiels et/ou effets secondaires
+============================================
+
+Ce score décrit une personne et couvre des serveurs que le lecteur ne connaît pas : le réserver à l'utilisateur lui-même et à ses amis.
+Le calcul parcourt tous ses messages : prévoir un index, ou un cache si ça devient lent.

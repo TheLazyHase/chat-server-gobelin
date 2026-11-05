@@ -1,0 +1,26 @@
+But de la demande & contexte
+============================
+
+Deux amis doivent pouvoir s'écrire en privé, avec les mêmes possibilités que dans un channel : direct, historique et réponses. Dépend de 08_demandes_d_ami.
+
+Proposition technique
+=====================
+
+Une conversation privée est un channel particulier, sans serveur, ce qui réutilise les routes de messages et le WebSocket.
+
+Ajouter une table direct_conversation (channel_id, user_a, user_b), avec une seule conversation par paire d'amis.
+
+POST /friend/{user_id}/conversation : renvoie {"channel":12}, en créant la conversation au premier appel. Si l'utilisateur n'est pas un ami : 404.
+
+Lecture, écriture et abonnement réservés aux deux participants, tant qu'ils sont amis.
+
+Utilisation approximative
+==========================
+
+Fréquent, comme les messages de channel.
+
+Probléme potentiels et/ou effets secondaires
+============================================
+
+Ces channels ne doivent jamais apparaître dans les listes de channels, et POST /channel/enter doit les refuser.
+Après un retrait d'ami, l'historique est conservé mais n'est plus accessible, et revient si les deux redeviennent amis.

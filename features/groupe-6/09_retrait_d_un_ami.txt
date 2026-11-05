@@ -1,0 +1,19 @@
+But de la demande & contexte
+============================
+
+Un utilisateur doit pouvoir retirer quelqu'un de ses amis. Dépend de la demande 08_demandes_d_ami.
+
+Proposition technique
+=====================
+
+DELETE /friend/{user_id} : supprime la relation, pour les deux personnes. Pas de relation : 404.
+
+Utilisation approximative
+==========================
+
+Rare.
+
+Probléme potentiels et/ou effets secondaires
+============================================
+
+L'autre personne perd aussi l'accès à la conversation privée : voir 23_messages_prives. Les connexions WebSocket ouvertes doivent cesser de recevoir cette conversation immédiatement.

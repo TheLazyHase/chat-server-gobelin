@@ -1,0 +1,24 @@
+But de la demande & contexte
+============================
+
+Notre application fonctionne comme Discord : un utilisateur crée des serveurs, et chaque serveur regroupe des channels. Aujourd'hui tous les channels sont au même niveau et rien ne permet de les regrouper.
+
+Proposition technique
+=====================
+
+Ajouter une table server (id, name, owner_id, creation_date) et une table server_member (server_id, user_id).
+
+POST /server avec {"name":"Mon serveur"} : crée le serveur, son créateur en devient propriétaire et membre, et un channel "general" est créé dedans.
+Réponse : {"id":1,"name":"Mon serveur","owner_id":2,"creation_date":"..."}
+
+GET /server : liste les serveurs de l'utilisateur connecté.
+
+Utilisation approximative
+==========================
+
+Création rare. Liste lue une fois au login, puis à chaque changement.
+
+Probléme potentiels et/ou effets secondaires
+============================================
+
+Le channel "general" global existant, où chaque utilisateur est ajouté automatiquement, ne doit pas changer pour les autres clients.
