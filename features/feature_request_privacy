@@ -1,0 +1,30 @@
+Goal of the request
+===================
+Enhance the chat system by introducing privacy, moderation, and message traceability features:
+- User Anonymity: hide identifiable personal information
+- Message Deletion: Possibility to delete sent messages
+- Message Timestamps: Record the arrival time of messages
+
+Technical proposition
+=====================
+Anonymity:
+- Add a boolean flag `is_anonymous`
+- If the flag is set: mask the sender's name
+
+Message Deletion:
+- `is_deleted` flag on the message
+- don't keep it on the server ?
+
+Message Arrival Time:
+- Add a `received_at` timestamp field, ISO format
+
+Approximate frequency of use
+============================
+Timestamps: Continuous: on every single message event
+Anonymity: Potentially always if needed, on every message
+Message Deletion: Potentially always if needed, on every message
+
+Potential problem
+=================
+Anonymity: Moderation
+Timestamps must be done server-side to prevent timezones problem
