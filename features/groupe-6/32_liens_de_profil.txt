@@ -1,0 +1,28 @@
+But de la demande & contexte
+============================
+
+Un utilisateur doit pouvoir afficher des liens sur son profil (Instagram, portfolio, etc.), visibles par les autres.
+
+Proposition technique
+=====================
+
+Ajouter à user un champ links, une liste vide par défaut :
+{"links":[{"label":"Instagram","url":"https://instagram.com/isabelle"},{"label":"Portfolio","url":"https://isabelle.fr"}]}
+
+PATCH /me avec {"links":[...]} : remplace toute la liste, dont l'ordre est conservé.
+
+Validation : 10 liens au plus, label de 32 caractères au plus, url de 500 caractères au plus et commençant par http:// ou https://. Sinon : 400.
+
+Ajouter links à GET /me et aux utilisateurs renvoyés (amis, membres d'un serveur).
+
+Utilisation approximative
+==========================
+
+Écriture rare. Lecture à chaque récupération d'utilisateurs.
+
+Probléme potentiels et/ou effets secondaires
+============================================
+
+Refuser tout autre protocole est indispensable : un lien javascript: exécuterait du code chez celui qui clique.
+Un lien peut mener vers un site malveillant et le label peut tromper sur sa destination : le client doit afficher l'adresse réelle ou prévenir avant de quitter l'application.
+Une liste modifiée n'apparaît chez les autres qu'à la prochaine lecture de l'utilisateur, car aucun événement WebSocket n'est demandé ici.
