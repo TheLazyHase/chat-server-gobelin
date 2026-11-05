@@ -1,0 +1,19 @@
+Goal of the request
+===================
+
+Let users say if they agree, disagree or are neutral about a message. This is the data used to compute the tension of the debate and the rose.
+
+Technical proposition
+=====================
+
+Add a "message_stance" table linking a user and a message, with a value (agree, disagree, neutral) and a date. Only one per user per message, and it can be changed.
+
+Approximate frequency of use
+============================
+
+Very high, about one click per argument per user
+
+Potential problem / side effect of note
+=======================================
+
+Lots of reads and writes, so it would be better to store the totals instead of recounting every time. A group of users could also flood one message with disagreements.
