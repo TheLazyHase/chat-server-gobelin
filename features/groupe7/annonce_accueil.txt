@@ -1,0 +1,36 @@
+But de la demande & contexte
+============================
+
+Permettre l'affichage d'annonces configurables sur la page d'accueil de
+l'application.
+
+Proposition technique
+=====================
+
+Créer un objet d'annonce contenant :
+
+- des coordonnées `x` et `y` pour sa position ;
+- un champ `type` pour identifier le type d'objet affiché ;
+- un champ `metadata` au format JSON contenant son contenu, ses propriétés et
+  ses informations visuelles.
+
+Les métadonnées doivent rester extensibles afin de permettre l'ajout de
+nouveaux types d'annonces sans modifier le modèle à chaque évolution.
+
+La diffusion en temps réel des modifications est détaillée dans la demande
+générale [features/groupe7/websocket.txt](websocket.txt).
+
+Utilisation approximative
+=========================
+
+À chaque chargement de la page d'accueil et lors de la création ou de la
+modification d'une annonce.
+
+Probléme potentiels et/ou effets secondaires
+============================================
+
+- Les coordonnées doivent être validées afin d'éviter des positions invalides.
+- Le type et les clés de métadonnées doivent être documentés.
+- Des métadonnées trop volumineuses peuvent ralentir le chargement de l'accueil.
+- Le contenu affiché doit être contrôlé afin d'éviter l'injection de contenu
+  non sécurisé.

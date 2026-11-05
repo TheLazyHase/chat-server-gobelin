@@ -1,0 +1,45 @@
+But de la demande & contexte
+============================
+
+Étendre l'objet utilisateur existant afin de prendre en charge la
+personnalisation du profil, l'onboarding, les éléments d'interface modulables,
+les avatars, les presets et l'affichage du rôle de chaque utilisateur. La
+création, l'authentification et la consultation des informations de base d'un
+utilisateur existent déjà dans l'API et ne font pas partie de cette demande.
+
+Proposition technique
+=====================
+
+Ajouter ou exposer :
+
+- un champ `metadata` au format JSON ;
+- un avatar ;
+- les informations et l'état d'avancement de l'onboarding ;
+- la position des éléments modulables de l'interface ;
+- une liste des utilisateurs avec leur rôle (`prof` ou `étudiant`) ;
+- une liste de presets et le style de texte associé.
+
+Les informations d'affichage et de personnalisation doivent être séparées des
+informations d'identité et d'autorisation lorsque cela est possible. Le rôle
+doit être porté par une donnée contrôlée et ne doit pas être déduit des
+métadonnées.
+
+La diffusion en temps réel des modifications utilisateur est détaillée dans la
+demande générale [features/groupe7/websocket.txt](websocket.txt).
+
+Utilisation approximative
+=========================
+
+Au login, pendant l'onboarding, lors de la modification du profil et au
+chargement de l'interface ou de la liste des utilisateurs.
+
+Probléme potentiels et/ou effets secondaires
+============================================
+
+- Les avatars et données d'onboarding peuvent contenir des informations
+  personnelles.
+- Les rôles peuvent avoir des droits différents et doivent être protégés contre
+  les modifications non autorisées.
+- Les positions et styles doivent être validés pour éviter un affichage
+  invalide.
+- Les métadonnées peuvent entrer en collision avec celles d'autres clients.

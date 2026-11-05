@@ -1,0 +1,70 @@
+But de la demande & contexte
+============================
+
+Ajouter une communication temps réel et bidirectionnelle entre l'application
+cliente et l'API afin de diffuser les nouveaux messages, les changements de
+channels et les mises à jour d'annonces.
+
+Cette demande est transversale : elle s'applique aux différentes features qui
+ont besoin de notifications temps réel et évite de définir un protocole
+WebSocket différent dans chaque demande.
+
+Proposition technique
+=====================
+
+Ajouter un endpoint WebSocket authentifié, par exemple :
+
+```
+GET /ws
+```
+
+Le client ouvre une connexion après son authentification et s'abonne aux
+channels auxquels il a accès. Les messages échangés utilisent un format JSON
+commun :
+
+```
+{
+  "type": "message.created",
+  "channel": "general",
+  "data": {}
+}
+```
+
+Types d'événements à prévoir :
+
+- `message.created` pour un nouveau message ;
+- `message.updated` pour une modification ;
+- `channel.updated` pour une modification de channel ;
+- `announcement.updated` pour une modification d'annonce ;
+- `user.updated` pour une modification de profil ou de personnalisation ;
+- `error` pour signaler une erreur au client.
+
+Le serveur doit vérifier l'identité de la connexion, les droits d'accès au
+channel et la validité des données avant toute diffusion. Il doit également
+gérer le ping/pong, la reconnexion côté client, la fermeture propre des
+connexions et la suppression des abonnements déconnectés.
+
+Les opérations qui modifient les données doivent continuer à passer par les
+endpoints HTTP classiques. Le WebSocket sert principalement à notifier les
+clients en temps réel, sans remplacer les endpoints HTTP classiques.
+
+Utilisation approximative
+=========================
+
+Une connexion persistante par client connecté, avec des événements envoyés à
+chaque nouveau message ou changement pertinent dans les channels auxquels le
+client est abonné.
+
+Probléme potentiels et/ou effets secondaires
+============================================
+
+- Le nombre de connexions simultanées peut augmenter la consommation mémoire
+  et CPU du serveur.
+- Les reconnexions doivent éviter de créer plusieurs abonnements identiques.
+- Les événements doivent respecter les permissions afin de ne pas divulguer
+  les messages ou métadonnées d'un autre channel.
+- Une file d'événements ou une stratégie de reconnexion doit gérer les
+  événements reçus pendant une coupure.
+- Les messages trop volumineux et le débit d'envoi doivent être limités.
+- Un proxy inverse ou un équilibreur de charge doit conserver les connexions
+  WebSocket et être configuré pour les mises à niveau HTTP nécessaires.

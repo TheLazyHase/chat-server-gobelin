@@ -1,0 +1,41 @@
+But de la demande & contexte
+============================
+
+Étendre les messages existants afin de prendre en charge des informations de
+présentation, différents types de messages et les sondages. La création et la
+lecture de messages existent déjà dans l'API et ne font pas partie de cette
+demande.
+
+Proposition technique
+=====================
+
+Ajouter au message :
+
+- un champ `metadata` au format JSON pour les données complémentaires ;
+- un champ `style` pour le style du texte et les informations visuelles ;
+- un champ `type`, dont la valeur `poll` représente un sondage ;
+- les données du sondage dans `metadata` : question, choix proposés et
+  réponses.
+
+Le contenu textuel actuel doit rester disponible et les messages sans
+métadonnées doivent continuer à fonctionner.
+
+La diffusion en temps réel des créations et mises à jour de messages est
+détaillée dans la demande générale [features/groupe7/websocket.txt](websocket.txt).
+
+Utilisation approximative
+=========================
+
+À chaque création et affichage d'un message. Les sondages sont également
+utilisés lors de leur création, affichage et mise à jour.
+
+Probléme potentiels et/ou effets secondaires
+============================================
+
+- Des métadonnées mal formées ou trop volumineuses peuvent dégrader les
+  performances.
+- Les valeurs de `type` et les clés de métadonnées doivent être documentées
+  pour éviter les collisions entre clients.
+- Les styles et données visuelles fournis par un client doivent être validés.
+- Les réponses à un sondage doivent être contrôlées afin d'éviter les votes
+  invalides ou multiples.

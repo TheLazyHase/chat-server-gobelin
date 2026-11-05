@@ -1,0 +1,36 @@
+But de la demande & contexte
+============================
+
+Étendre les channels existants afin de permettre leur personnalisation et de
+représenter leur position dans l'interface ou dans un espace modulable. La
+création et l'accès aux channels existent déjà dans l'API et ne font pas partie
+de cette demande.
+
+Proposition technique
+=====================
+
+Ajouter ou exposer pour chaque channel :
+
+- des coordonnées `x` et `y` ;
+- un champ `type` pour identifier le type de channel ;
+- un champ `metadata` au format JSON ;
+- le style du channel dans ses métadonnées.
+
+Le format doit être extensible afin de permettre l'ajout de propriétés visuelles
+ou fonctionnelles sans migration systématique du modèle.
+
+La diffusion en temps réel des modifications de channel est détaillée dans la
+demande générale [features/groupe7/websocket.txt](websocket.txt).
+
+Utilisation approximative
+=========================
+
+À la création, à la modification et au chargement d'un channel.
+
+Probléme potentiels et/ou effets secondaires
+============================================
+
+- Les coordonnées doivent être contrôlées pour éviter des positions invalides.
+- Les styles doivent être validés avant leur enregistrement.
+- Les clés de métadonnées et les valeurs de `type` doivent être documentées.
+- Des métadonnées trop volumineuses peuvent augmenter le temps de chargement.
