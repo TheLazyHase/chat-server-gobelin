@@ -1,0 +1,22 @@
+But de la demande & contexte
+============================
+
+Beaucoup de groupes ont besoin de la liste des utilisateurs et de celle des channels, y compris sans être connectés. Par exemple, une page d'accueil qui affiche les utilisateurs en arrière-plan du formulaire de connexion. Aujourd'hui, il n'existe aucune route pour lister les channels (GET /channel est commenté) ni les utilisateurs.
+
+Proposition technique
+=====================
+
+Deux routes publiques, en lecture seule, sans token :
+- GET /users : renvoie uniquement les informations publiques (id, username, creation_date), jamais le password_hash.
+- GET /channels : renvoie la liste des channels (id, name, creation_date).
+
+Utilisation approximative
+=========================
+
+À chaque affichage de la page d'accueil ou de connexion : faible.
+
+Problèmes potentiels et/ou effets secondaires
+=============================================
+
+- N'importe qui peut voir la liste des comptes : c'est un choix assumé.
+- Si des channels privés sont ajoutés (voir la demande sur les rôles), ils ne doivent pas apparaître pour quelqu'un qui n'est pas connecté.

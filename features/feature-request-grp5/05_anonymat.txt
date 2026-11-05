@@ -1,0 +1,23 @@
+But de la demande & contexte
+============================
+
+Certains groupes aimeraient pouvoir envoyer des messages anonymes. Nous pouvons masquer l'auteur côté front, mais l'API le renvoie quand même (user_id et user) : il suffit de regarder les requêtes réseau. Sans le back, l'anonymat n'est pas réel.
+
+Proposition technique
+=====================
+
+- Un champ facultatif "anonymous": true sur POST /channel/message.
+- Pour un message anonyme, GET /channel/message renvoie user_id et user à null à tout le monde, sauf à l'auteur, qui doit pouvoir reconnaître ses propres messages.
+- Le serveur garde l'auteur en base.
+
+Utilisation approximative
+=========================
+
+À chaque envoi d'un message anonyme.
+
+Problèmes potentiels et/ou effets secondaires
+=============================================
+
+- Modération : un admin doit-il pouvoir voir l'auteur ?
+- Dans un channel à deux membres, l'anonymat ne cache rien.
+- À préciser : l'anonymat vaut-il aussi pour les messages adressés à une seule personne ?

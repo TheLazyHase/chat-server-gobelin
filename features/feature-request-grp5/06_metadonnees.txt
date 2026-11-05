@@ -1,0 +1,25 @@
+But de la demande & contexte
+============================
+
+Beaucoup de groupes ont besoin de stocker plus d'informations sur les utilisateurs, les channels et les messages. Comme chaque groupe a des besoins différents, le mieux serait de pouvoir ajouter ces informations nous-mêmes.
+
+Par exemple, un groupe a besoin de ces champs sur les utilisateurs : birthday (date), photo_url, font_key et avatar_key.
+
+Proposition technique
+=====================
+
+- Un champ "metadata" en JSON (JSONB) sur les utilisateurs, les channels et les messages, renvoyé avec l'objet.
+- Une route pour le modifier, par exemple PATCH /me { "metadata": { ... } } pour son propre profil.
+- Les champs précis (birthday, photo_url, font_key, avatar_key) peuvent être ajoutés comme colonnes, ou passer par ce champ libre.
+
+Utilisation approximative
+=========================
+
+Lecture à chaque chargement des utilisateurs ou des messages. Écriture rare (modification du profil).
+
+Problèmes potentiels et/ou effets secondaires
+=============================================
+
+- Collision avec les données des autres groupes si le serveur est partagé : chaque groupe pourrait ranger ses données sous sa propre clé, et une modification devrait fusionner au lieu de tout remplacer.
+- Taille : prévoir une limite.
+- Si GET /users est public, les métadonnées le sont aussi : attention aux données personnelles comme la date de naissance.

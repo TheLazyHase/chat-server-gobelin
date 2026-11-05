@@ -1,0 +1,26 @@
+But de la demande & contexte
+============================
+
+Actuellement, nous pouvons seulement créer des messages, des utilisateurs et des channels, jamais les supprimer.
+
+Proposition technique
+=====================
+
+- Des routes de suppression, par exemple :
+    DELETE /channel/message?id=42
+    DELETE /channel?id=3
+    DELETE /user?id=12
+- Renvoyer l'identifiant de chaque message dans GET /channel/message : aujourd'hui il est masqué (json:"-"), donc impossible de désigner un message précis.
+- Droits : l'auteur peut supprimer son propre message, un admin peut tout supprimer.
+
+Utilisation approximative
+=========================
+
+Rare.
+
+Problèmes potentiels et/ou effets secondaires
+=============================================
+
+- Que deviennent les messages d'un utilisateur supprimé, et les messages d'un channel supprimé ?
+- Suppression réelle ou logique (masquée mais conservée) : la suppression logique permet de revenir en arrière.
+- Dépend de la demande sur les rôles pour savoir qui a le droit de supprimer.

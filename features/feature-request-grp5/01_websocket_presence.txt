@@ -1,0 +1,34 @@
+But de la demande & contexte
+============================
+
+Aujourd'hui, il faut interroger l'API régulièrement pour voir les nouveaux messages. Sans temps réel, beaucoup de groupes ne peuvent pas tester leur projet correctement. Nous avons aussi besoin de savoir quels utilisateurs sont connectés à la messagerie.
+
+Proposition technique
+=====================
+
+Un endpoint WebSocket GET /ws. Un navigateur ne peut pas envoyer d'en-tête Authorization sur un WebSocket, donc le token passe en paramètre : /ws?token=...
+
+Événements envoyés par le serveur :
+  { "type": "presence.snapshot", "user_ids": [3, 12] }   à la connexion, la liste des utilisateurs en ligne
+  { "type": "presence.join", "user_id": 12 }             un utilisateur se connecte
+  { "type": "presence.leave", "user_id": 12 }            un utilisateur se déconnecte
+  { "type": "message.new", ... }                         un nouveau message dans un channel dont on est membre
+
+Règles :
+- Un utilisateur connecté sur deux onglets ne compte qu'une fois.
+- Il n'est « parti » qu'à la fermeture de sa dernière connexion.
+- Un ping/pong permet de détecter les connexions mortes.
+
+GET /presence renvoie aussi la liste des utilisateurs en ligne, pour ceux qui n'utilisent pas le WebSocket.
+
+Utilisation approximative
+=========================
+
+Une connexion permanente par onglet ouvert. Un événement à chaque connexion, déconnexion et nouveau message. GET /presence au chargement d'une page.
+
+Problèmes potentiels et/ou effets secondaires
+=============================================
+
+- Le token passé dans l'URL apparaît dans les logs. Un ticket à usage unique et de courte durée (obtenu avec le token, puis passé à /ws) serait plus propre.
+- Sans ping/pong, des utilisateurs partis resteraient affichés « en ligne ».
+- Chaque onglet ouvert garde une connexion : à surveiller si beaucoup de groupes l'utilisent en même temps.
