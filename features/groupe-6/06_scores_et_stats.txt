@@ -1,0 +1,65 @@
+But de la demande & contexte
+============================
+
+Afficher des scores d'émotion à plusieurs échelles (utilisateur, serveur, channel), et suivre leur évolution dans le temps pour faire de la data visualisation : courbes, heatmaps, pics d'activité. Dépend de 01_serveurs_et_channels et 05_detection_emotions.
+
+Proposition technique
+=====================
+
+Scores
+------
+
+Chaque route additionne les valeurs de message_emotion sur son périmètre :
+
+GET /user/{id}/emotions : tous les messages de l'utilisateur, tous serveurs confondus. Réservé à lui-même et à ses amis.
+GET /server/{id}/emotions : tous les channels du serveur. Non-membre : 404.
+GET /channel/{id}/emotions : tout le channel. Réservé aux utilisateurs qui y ont accès.
+GET /server/{id}/user/{user_id}/emotions : un utilisateur dans le serveur. Réservé aux membres.
+GET /channel/{id}/user/{user_id}/emotions : un utilisateur dans le channel. Réservé aux utilisateurs qui y ont accès.
+
+Format de réponse commun :
+{
+  "message_count": 120,
+  "emotions": {"joy":34,"fear":5,"sadness":8,"anger":3,"surprise":6,"disgust":1},
+  "polarity": {"positive":50,"negative":20}
+}
+
+Évolution dans le temps
+-----------------------
+
+Ajouter /timeline à chacune de ces routes, avec les mêmes droits, par exemple :
+GET /server/{id}/emotions/timeline?from=2026-11-01&to=2026-11-30&bucket=day
+
+bucket vaut "day" ou "week". Les dates sont en UTC. Paramètre invalide : 400.
+
+Le format reprend les valeurs ci-dessus pour chaque période :
+{
+  "bucket": "day",
+  "points": [
+    {
+      "date": "2026-11-01",
+      "message_count": 12,
+      "emotions": {"joy":3,"fear":0,"sadness":1,"anger":0,"surprise":2,"disgust":0},
+      "polarity": {"positive":5,"negative":1}
+    }
+  ]
+}
+
+Une période sans message est renvoyée avec des valeurs à zéro, pour que le client n'ait pas à combler les trous. Limiter une requête à 366 points : au-delà, 400.
+
+Utilisation approximative
+==========================
+
+À chaque ouverture d'un profil, de la carte des serveurs, d'une page de statistiques ou d'un graphique, donc faible à moyenne, mais chaque requête regroupe beaucoup de messages.
+
+Probléme potentiels et/ou effets secondaires
+============================================
+
+Le calcul peut devenir lent sur un utilisateur ou un gros serveur : prévoir un index sur le channel, l'utilisateur et la date, puis un cache si besoin.
+
+Le score global décrit une personne et couvre des serveurs que le lecteur ne connaît pas : c'est pourquoi il est réservé à l'utilisateur et à ses amis.
+Tous les membres d'un serveur voient le score de chacun. Dans un channel à deux ou trois personnes, le score du channel permet presque de déduire celui de chacune. Un classement ou une comparaison pourrait mettre mal à l'aise : à prévoir côté interface.
+Avec peu de messages, un score n'a pas de sens : message_count permet au client de le signaler.
+
+Le découpage en UTC peut décaler les messages de fin de soirée d'un jour par rapport à l'heure locale de l'utilisateur.
+Si des messages sont modifiés ou supprimés, les chiffres changent, y compris sur les périodes passées.

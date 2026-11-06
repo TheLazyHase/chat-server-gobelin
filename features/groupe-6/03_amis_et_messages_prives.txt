@@ -1,0 +1,54 @@
+But de la demande & contexte
+============================
+
+Un utilisateur doit pouvoir ajouter un autre utilisateur en ami par son username, l'autre personne devant accepter, et le retirer ensuite. Les changements doivent apparaître sans recharger la page. Deux amis doivent aussi pouvoir s'écrire en privé, avec les mêmes possibilités que dans un channel. Dépend de 02_messages.
+
+Proposition technique
+=====================
+
+Demandes d'ami
+--------------
+
+Ajouter une table friendship (requester_id, addressee_id, status, creation_date), avec status "pending" ou "accepted", et une seule relation par paire d'utilisateurs quel que soit le sens.
+
+GET /friend : renvoie {"friends":[...],"incoming":[...],"outgoing":[...]}, chaque entrée avec id et username.
+POST /friend/request avec {"username":"isabelle"} : envoie la demande. Utilisateur inconnu : 404. Soi-même : 400. Déjà amis ou demande en attente : 409. Si l'autre personne avait déjà fait la demande, elle est acceptée.
+POST /friend/{user_id}/accept : accepte une demande reçue. Réservé au destinataire.
+DELETE /friend/{user_id}/request : refuse une demande reçue ou annule une demande envoyée.
+
+Retrait
+-------
+
+DELETE /friend/{user_id} : supprime la relation, pour les deux personnes. Pas de relation : 404.
+
+Mise à jour en direct
+---------------------
+
+Envoyer {"type":"friends_changed"} sur le WebSocket aux deux personnes concernées, à chaque changement. Il ne contient rien d'autre : le client relit GET /friend.
+
+Messages privés
+---------------
+
+Une conversation privée est un channel particulier, sans serveur, ce qui réutilise les routes de messages et le WebSocket.
+
+Ajouter une table direct_conversation (channel_id, user_a, user_b), avec une seule conversation par paire d'amis.
+
+POST /friend/{user_id}/conversation : renvoie {"channel":12}, en créant la conversation au premier appel. Si l'utilisateur n'est pas un ami : 404.
+
+Lecture, écriture et abonnement réservés aux deux participants, tant qu'ils sont amis.
+
+Utilisation approximative
+==========================
+
+Liste d'amis lue au login et à chaque changement. Demandes occasionnelles et retraits rares. Messages privés fréquents, comme les messages de channel.
+
+Probléme potentiels et/ou effets secondaires
+============================================
+
+Le 404 révèle si un username existe. Sans limitation de débit, on pourrait s'en servir pour lister les comptes ou envoyer des demandes en masse.
+
+Il faut un canal WebSocket propre à chaque utilisateur, et pas seulement par channel. Ce canal resservira pour d'autres notifications.
+
+Les conversations privées ne doivent jamais apparaître dans les listes de channels, et POST /channel/enter doit les refuser.
+
+Après un retrait d'ami, les connexions WebSocket ouvertes doivent cesser immédiatement de recevoir la conversation. L'historique est conservé mais n'est plus accessible, et revient si les deux redeviennent amis.

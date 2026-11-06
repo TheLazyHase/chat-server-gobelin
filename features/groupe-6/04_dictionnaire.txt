@@ -1,0 +1,30 @@
+But de la demande & contexte
+============================
+
+Chaque serveur a son propre dictionnaire : en sélectionnant un mot dans un message, un membre lui donne une définition, et ce mot affiche ensuite sa définition au survol. Les membres doivent voir les changements sans recharger. Le repérage des mots se fait côté client. Dépend de 01_serveurs_et_channels.
+
+Proposition technique
+=====================
+
+Ajouter une table definition (id, server_id, term, definition, author_id, creation_date), avec un terme unique par serveur sans tenir compte de la casse. Terme de 100 caractères au plus, définition de 2000 au plus.
+
+GET /server/{id}/definition : liste les définitions, avec leur auteur.
+
+POST /server/{id}/definition avec {"term":"kubernetes","definition":"orchestrateur de conteneurs"} : ajoute une définition. Ouvert à tous les membres. Terme déjà défini : 409.
+
+PATCH /server/{id}/definition/{definition_id} avec {"term":"...","definition":"..."} : modifie la définition. Terme déjà défini : 409.
+DELETE /server/{id}/definition/{definition_id} : supprime la définition.
+Ces deux routes sont réservées à l'auteur de la définition, au propriétaire et aux admins du serveur : 403 pour les autres membres.
+
+Envoyer {"type":"definitions_changed","server":1} sur le WebSocket aux membres à chaque ajout, modification ou suppression. Le client relit alors la liste.
+
+Utilisation approximative
+==========================
+
+Liste lue à chaque ouverture de serveur. Ajouts et modifications occasionnels.
+
+Probléme potentiels et/ou effets secondaires
+============================================
+
+Le contenu doit être renvoyé tel quel, c'est au client de l'échapper à l'affichage.
+Il n'y a pas d'historique : une définition modifiée ou supprimée est perdue.

@@ -1,0 +1,42 @@
+But de la demande & contexte
+============================
+
+Chaque message doit recevoir une émotion, calculée par le serveur. Elle sert à l'affichage, aux scores et aux visualisations. Pour cela, nous avons besoin d'accéder en base au lexique FEEL (French Expanded Emotion Lexicon, Abdaoui et al., 2017), qui associe environ 14 000 mots français à une polarité et à 6 émotions. Dépend de 02_messages.
+
+Proposition technique
+=====================
+
+Table du lexique
+----------------
+
+Ajouter une table emotion_lexicon (word, polarity, joy, fear, sadness, anger, surprise, disgust), avec word en clé primaire, et l'alimenter une fois à l'installation à partir du fichier FEEL.
+
+GET /emotion-lexicon?word=heureux : renvoie l'entrée du mot, ou 404.
+GET /emotion-lexicon?limit=200&after=mot : parcourt le lexique par pages.
+
+Détection
+---------
+
+À la création d'un message : découper son texte en mots, en minuscules, et les chercher dans emotion_lexicon.
+
+Ajouter une table message_emotion (message_id, joy, fear, sadness, anger, surprise, disgust, positive, negative, dominant_emotion), où chaque valeur est le nombre de mots reconnus dans le message.
+
+dominant_emotion est l'émotion la plus représentée, ou nul si aucun mot n'est reconnu ou en cas d'égalité.
+
+Ajouter à chaque message renvoyé un champ "emotion" avec ces valeurs. Calculer aussi les messages déjà en base.
+
+Recalculer à chaque modification d'un message, et supprimer la ligne quand le message est supprimé.
+
+Utilisation approximative
+==========================
+
+Écriture du lexique unique à l'installation. Détection une fois par message envoyé, donc fréquent : une seule requête par message pour chercher tous ses mots.
+
+Probléme potentiels et/ou effets secondaires
+============================================
+
+Licence : nous n'avons pas trouvé de licence officielle pour FEEL. Il est traduit de NRC EmoLex, dont les conditions parlent d'un usage libre pour la recherche. À vérifier avant de mettre le fichier dans ce dépôt public.
+Le format exact du fichier reste à confirmer au moment de l'import.
+
+Le résultat restera approximatif : ni la négation ("pas content"), ni l'ironie ne sont comprises, et FEEL peut ne pas contenir toutes les formes d'un mot.
+Un échec du calcul ne doit pas empêcher l'envoi du message.
