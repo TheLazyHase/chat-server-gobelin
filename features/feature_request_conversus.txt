@@ -1,0 +1,59 @@
+Goal of the request
+===================
+Add "ConVersus" to the chat: timed debate spaces opened from a channel, where messages change shape with the emotions of the readers:
+- ConVersus: open a debate from a few selected messages, with a subject (the first message by default, can be renamed) and a timer
+- Reactions: readers react with what they felt (joy, anger, sadness, surprise), the letters of the message switch to the font of each emotion
+- Real time: every reaction triggers an animation for everyone
+- Replies: a reply grows from the message it answers (the debate is drawn as a tree)
+- Roles: debaters write, spectators only react
+- Kept messages: participants keep the important messages, they make the summary (next to the final tree, shown on the left)
+
+Technical proposition
+=====================
+ConVersus:
+- New `conversus` table: `channel_id`, `subject`, `end_date`, `status` (open / closed)
+- `conversus_id` field on messages, instead of `channel_id`
+- Routes to create, list by channel, read, close, reopen and add time
+
+Reactions:
+- New `reactions` table: `message_id`, `user_id`, `emotion`, `is_anonymous`
+- Primary key (`message_id`, `user_id`): one reaction per person per message, reacting again replaces it
+- `emotion` limited to joy, anger, sadness, surprise
+- If anonymous: keep the user on the server, don't send the name back
+
+Real time:
+- Use the websocket planned in message.md, one per ConVersus
+- Or a route "what changed since", called every 1 or 2 seconds
+
+Replies:
+- `reply_to` field on messages (message id or null)
+- The author can change it to move their reply to another branch
+
+Roles:
+- New `participants` table: `conversus_id`, `user_id`, `role` (debater / spectator)
+- Never remove someone who left: reactions are divided by everyone who took part
+
+Kept messages:
+- `kept` boolean on messages, any participant can change it
+- The summary tree is rebuilt from the messages (`reply_to`) and their reactions, no extra storage needed
+- So a closed ConVersus must keep its messages and reactions readable
+
+Anonymity:
+- Same `is_anonymous` flag as feature_request_privacy
+
+Approximate frequency of use
+============================
+Reactions: Very high, several per message, from almost everyone
+Real time: Continuous while a ConVersus is open
+Replies: On every message sent in a ConVersus
+ConVersus: A few times a day per channel
+Roles, kept messages, moving a reply: From time to time
+
+Potential problem
+=================
+Anonymous reactions: the server keeps an identity it never shows
+Moving a reply: check that a message is never attached to one of its own replies
+Timer: closing at `end_date` can be done server-side, or we compare on our side if simpler
+Emotions: we may add fear and disgust later
+No AI: emotions only come from what people click
+Priority if it's too much: ConVersus, then reactions, then real time
