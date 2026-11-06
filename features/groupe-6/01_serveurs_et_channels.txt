@@ -1,0 +1,75 @@
+But de la demande & contexte
+============================
+
+Notre application fonctionne comme Discord : un utilisateur crée des serveurs, chaque serveur regroupe des channels, et on n'y entre que sur invitation. Aujourd'hui tous les channels sont au même niveau et rien ne permet de les regrouper. Le créateur du serveur, son propriétaire, doit aussi pouvoir nommer des admins pour l'aider à le gérer.
+
+Proposition technique
+=====================
+
+Serveurs
+--------
+
+Ajouter une table server (id, name, owner_id, invite_code, creation_date) et une table server_member (server_id, user_id, role), où role vaut "member" par défaut ou "admin". Le propriétaire reste désigné par owner_id.
+
+POST /server avec {"name":"Mon serveur"} : crée le serveur. Son créateur en devient propriétaire et membre, et un channel "general" est créé dedans.
+
+GET /server : liste les serveurs de l'utilisateur connecté.
+{"id":1,"name":"Mon serveur","owner_id":2,"admins":[5,8],"invite_code":"abc123","creation_date":"..."}
+
+PATCH /server/{id} avec {"name":"Nouveau nom"} : renomme le serveur.
+DELETE /server/{id} : supprime le serveur, ses channels, leurs messages et son dictionnaire.
+POST /server/{id}/leave : retire l'utilisateur des membres. Le propriétaire reçoit un 409, car il n'a personne à qui transmettre le serveur.
+
+Invitation
+----------
+
+invite_code est unique et aléatoire.
+
+POST /server/join avec {"invite_code":"abc123"} : ajoute l'utilisateur connecté aux membres et renvoie le serveur. Rejoindre un serveur dont on est déjà membre ne change rien. Code inconnu : 404.
+
+Channels
+--------
+
+Ajouter un champ server_id, nul par défaut, à la table des channels.
+
+POST /server/{id}/channel avec {"name":"annonces"} : crée le channel. Nom déjà pris dans ce serveur, sans tenir compte de la casse : 409.
+GET /server/{id}/channel : liste les channels du serveur, pour ses membres.
+PATCH /channel/{id} avec {"name":"infos"} : renomme le channel. Nom déjà pris dans le serveur : 409.
+DELETE /channel/{id} : supprime le channel et ses messages.
+
+Admins
+------
+
+PUT /server/{id}/admin/{user_id} : nomme un membre admin.
+DELETE /server/{id}/admin/{user_id} : le repasse simple membre.
+Viser le propriétaire : 409. Utilisateur visé non membre : 404.
+
+Droits
+------
+
+Propriétaire uniquement : DELETE /server/{id} et les deux routes d'admin.
+Propriétaire et admins : renommer le serveur, créer, renommer ou supprimer un channel, ainsi que les actions de modération des fiches 02_messages, 04_dictionnaire et 08_tags.
+Pour une action non autorisée : 403 pour un membre, 404 pour un non-membre.
+
+WebSocket
+---------
+
+Envoyer {"type":"servers_changed","server":1} aux membres concernés à chaque changement, pour mettre à jour leur écran en direct.
+
+Utilisation approximative
+==========================
+
+Création, gestion et nomination rares. Liste des serveurs lue au login et à chaque changement. Liste des channels lue à chaque ouverture d'un serveur.
+
+Probléme potentiels et/ou effets secondaires
+============================================
+
+Le channel "general" global existant, où chaque utilisateur est ajouté automatiquement, ne doit pas changer pour les autres clients. Les channels globaux n'ont pas de propriétaire et ne sont pas concernés par la gestion ci-dessus.
+
+POST /channel/enter permet d'entrer dans un channel avec son seul nom : il doit refuser un channel de serveur à un non-membre, et lire ou écrire dans ce channel aussi. Le nom seul ne suffit plus à identifier un channel, car deux serveurs peuvent avoir un "general".
+
+Un code d'invitation trop court pourrait être deviné : il faut qu'il soit assez long, et idéalement limiter le nombre d'essais.
+
+Quelqu'un qui quitte un serveur doit être retiré de ses abonnements WebSocket, sinon il continue de recevoir ses messages. Un admin qui quitte le serveur perd son rôle, et ne le retrouve pas s'il revient.
+
+Les suppressions sont définitives et touchent tous les membres. Un admin peut supprimer un channel et ses messages : le propriétaire peut lui retirer son rôle, mais pas récupérer ce qui a été supprimé.

@@ -1,0 +1,76 @@
+But de la demande & contexte
+============================
+
+Les messages doivent arriver en direct, sans interroger GET /channel/message en boucle : la doc indique que le WebSocket est "To be implemented". GET /channel/message renvoie aussi une liste sans identifiant ni pagination, alors que nous devons charger les derniers messages à l'ouverture, remonter dans l'historique et récupérer ceux manqués après une coupure. Enfin, un utilisateur doit pouvoir répondre à un message précis, modifier ou supprimer un message.
+
+Proposition technique
+=====================
+
+Temps réel
+----------
+
+Connexion WebSocket authentifiée avec le JWT.
+
+Le client s'abonne à un channel : {"type":"subscribe","channel":4}. Refusé s'il n'y a pas accès.
+
+Le serveur envoie chaque nouveau message aux abonnés du channel, après son écriture en base :
+{"type":"message","channel":4,"message":{...}}, avec le même contenu que GET /channel/message.
+
+Ajouter à POST /channel/message un champ optionnel client_message_id (UUID choisi par le client). Un renvoi avec le même identifiant redonne le message existant au lieu d'en créer un second.
+
+Historique et rattrapage
+------------------------
+
+Ajouter un champ "id" à chaque message renvoyé, unique dans tout le back et croissant.
+
+Ajouter à GET /channel/message trois paramètres optionnels :
+- limit : nombre de messages, 50 par défaut, 200 au maximum.
+- before_id : renvoie les messages qui précèdent cet identifiant, pour remonter dans l'historique.
+- after_id : renvoie les messages qui suivent cet identifiant, pour rattraper une coupure.
+before_id et after_id ensemble : 400.
+
+Sans ces paramètres, l'API renvoie les derniers messages. Dans tous les cas, les messages sont renvoyés du plus ancien au plus récent.
+
+Réponses
+--------
+
+Ajouter un champ optionnel reply_to_id à POST /channel/message. Il doit désigner un message du même channel, sinon 400.
+
+Ajouter à chaque message renvoyé un champ reply_to, nul si ce n'est pas une réponse :
+{"id":12,"user":"isabelle","content":"200 premiers caractères du message d'origine"}
+
+Modification
+------------
+
+PATCH /channel/message/{id} avec {"content":"Nouveau texte"} : modifie le message et renvoie sa nouvelle version. Mêmes règles de contenu que POST /channel/message, sinon 400. Réservé à l'auteur : 403 pour un autre utilisateur du channel, 404 sans accès au channel.
+
+Ajouter à chaque message renvoyé un champ edited_at, nul si le message n'a jamais été modifié.
+
+WebSocket : {"type":"message_updated","channel":4,"message":{...}} aux abonnés du channel.
+
+Suppression
+-----------
+
+DELETE /channel/message/{id} : supprime définitivement le message. Réservé à l'auteur et, dans un channel de serveur, au propriétaire et aux admins : 403 pour un autre utilisateur du channel, 404 sans accès au channel.
+
+WebSocket : {"type":"message_deleted","channel":4,"message_id":12} aux abonnés du channel.
+
+Utilisation approximative
+==========================
+
+C'est l'usage principal, donc fréquent : une connexion par onglet ouvert, un événement par message envoyé, et une lecture à chaque ouverture de channel, à chaque remontée dans l'historique et à chaque reconnexion. Modifications et suppressions occasionnelles.
+
+Probléme potentiels et/ou effets secondaires
+============================================
+
+Il faut couper ou revérifier une connexion WebSocket quand son JWT expire, et quand l'utilisateur n'a plus accès au channel.
+
+Les clients qui lisent déjà toute la liste ne recevraient plus que les 50 derniers messages : la limite peut ne s'appliquer que si le paramètre est fourni. Prévoir un index sur (channel, id).
+
+La citation d'une réponse doit venir de la base, jamais du client, pour qu'elle ne puisse pas être falsifiée. Si le message d'origine est supprimé, reply_to devient nul et la réponse reste.
+
+Le rattrapage par after_id ne renvoie que les nouveaux messages : une modification ou une suppression faite pendant une coupure n'apparaît qu'au rechargement des messages concernés.
+
+Une modification ne garde pas l'ancienne version, et un auteur peut changer le sens d'un message auquel d'autres ont déjà répondu. Les citations changent avec le nouveau texte.
+
+Une suppression est définitive, y compris quand un admin supprime le message du propriétaire ou d'un autre admin. Les channels globaux n'ont pas de propriétaire : seul l'auteur peut y supprimer ses messages.

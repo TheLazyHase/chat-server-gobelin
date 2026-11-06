@@ -1,0 +1,27 @@
+But de la demande & contexte
+============================
+
+Pouvoir mettre des tags sur un serveur ou un channel pour décrire son sujet. Dépend de 01_serveurs_et_channels.
+
+Proposition technique
+=====================
+
+Ajouter une table server_tag (server_id, tag) et une table channel_tag (channel_id, tag), avec un tag unique par serveur ou par channel sans tenir compte de la casse, de 32 caractères au plus.
+
+Ajouter un champ "tags" aux serveurs et aux channels renvoyés.
+
+PUT /server/{id}/tags avec {"tags":["jeux","france"]} : remplace la liste.
+PUT /channel/{id}/tags avec {"tags":["annonces","important"]} : remplace la liste.
+
+20 tags au plus. Réservé au propriétaire et aux admins du serveur.
+
+Utilisation approximative
+==========================
+
+Écriture rare. Lecture avec la liste des serveurs et des channels.
+
+Probléme potentiels et/ou effets secondaires
+============================================
+
+Sans liste commune, plusieurs variantes d'un même tag peuvent coexister ("jeu", "jeux").
+Les channels globaux n'ont pas de propriétaire : il faut décider qui peut les tagger, ou le refuser.

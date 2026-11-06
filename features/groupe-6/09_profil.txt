@@ -1,0 +1,68 @@
+But de la demande & contexte
+============================
+
+Un utilisateur doit pouvoir personnaliser son profil : son état (en ligne, absent, ne pas déranger, invisible), une bio, des liens (Instagram, portfolio, etc.) et les réglages de la font variable. Il doit aussi pouvoir choisir si son profil est public ou privé. Le client utilise une seule font variable (TTF) pour tous : le fichier reste côté client, et la fusion des configs de deux utilisateurs se fait côté client. Dépend de 01_serveurs_et_channels, 02_messages et 03_amis_et_messages_prives.
+
+Proposition technique
+=====================
+
+Ajouter à user les champs ci-dessous. PATCH /me permet de les modifier. Ils sont renvoyés par GET /me et avec les utilisateurs (amis, membres d'un serveur). Valeur invalide : 400.
+
+État
+----
+
+status vaut "online" par défaut, "away", "dnd" ou "invisible". L'état choisi est conservé après une déconnexion.
+PATCH /me avec {"status":"dnd"}
+
+Les autres reçoivent un champ presence : "online", "away", "dnd" ou "offline". Un utilisateur sans connexion WebSocket ouverte ou en "invisible" apparaît en "offline". Seul GET /me renvoie status.
+
+Envoyer {"type":"presence_changed","user_id":3,"presence":"dnd"} sur le WebSocket à ses amis et aux membres de ses serveurs, à chaque changement.
+
+Bio
+---
+
+bio fait 500 caractères au plus, et vaut null par défaut.
+PATCH /me avec {"bio":"Développeur à Lyon"}. La valeur null ou une chaîne vide l'efface.
+
+Liens
+-----
+
+links est une liste, vide par défaut, dont l'ordre est conservé. 10 liens au plus, label de 32 caractères au plus, url de 500 caractères au plus et commençant par http:// ou https://.
+PATCH /me avec {"links":[{"label":"Portfolio","url":"https://isabelle.fr"}]} : remplace toute la liste.
+
+Config de font
+--------------
+
+font_config vaut null par défaut. C'est un objet de 16 axes au plus, dont chaque clé est un nom d'axe de 4 lettres ou chiffres et chaque valeur un nombre.
+PATCH /me avec {"font_config":{"wght":650,"wdth":90}} : remplace toute la config. La valeur null la remet à zéro.
+
+Visibilité
+----------
+
+visibility vaut "public" par défaut, ou "private".
+PATCH /me avec {"visibility":"private"}
+
+GET /user/{id} : renvoie le profil d'un utilisateur, à tout utilisateur connecté. Identifiant inconnu : 404.
+{"id":3,"user":"isabelle","visibility":"public","bio":"Développeur à Lyon","links":[{"label":"Portfolio","url":"https://isabelle.fr"}]}
+
+Pour un profil privé, si le lecteur n'est ni l'utilisateur lui-même ni un de ses amis, renvoyer bio à null et links vide, partout où ces champs sont renvoyés.
+
+Utilisation approximative
+==========================
+
+Modifications rares. Lecture à chaque récupération d'utilisateurs, avec une vérification d'amitié pour les profils privés. Un événement de présence à chaque connexion ou déconnexion, envoyé à de nombreux destinataires, donc assez fréquent.
+
+Probléme potentiels et/ou effets secondaires
+============================================
+
+Présence : l'utilisateur peut avoir plusieurs onglets, il ne passe en "offline" qu'à la fermeture de sa dernière connexion. Prévoir un court délai avant de l'annoncer, pour qu'un rechargement de page ne produise pas de faux départ. Un utilisateur "invisible" ne doit jamais être distingué d'un utilisateur "offline". "dnd" ne bloque pas les messages, c'est au client de couper ses notifications.
+
+Liens : refuser tout autre protocole est indispensable, car un lien javascript: exécuterait du code chez celui qui clique. Un lien peut aussi mener vers un site malveillant et le label peut tromper sur sa destination : le client doit afficher l'adresse réelle ou prévenir avant de quitter l'application.
+
+Bio : le contenu doit être renvoyé tel quel, c'est au client de l'échapper à l'affichage. Aucune modération n'est prévue.
+
+Font : le serveur ne connaît pas la font et ne vérifie donc pas les bornes de chaque axe, le client doit les limiter à la lecture.
+
+Visibilité : le filtrage doit se faire côté serveur, un client ne doit jamais recevoir une bio ou des liens qu'il ne devrait pas voir. Le pseudo reste visible dans tous les cas, sinon les demandes d'ami et les messages de channel ne fonctionneraient plus. Le profil privé ne masque que la bio et les liens : l'état, la config de font et les scores gardent leurs propres règles. Un ami retiré perd aussitôt l'accès, mais a pu copier ce qu'il a déjà lu.
+
+Une bio, des liens ou une config de font modifiés n'apparaissent chez les autres qu'à la prochaine lecture de l'utilisateur, car aucun événement WebSocket n'est demandé pour eux.

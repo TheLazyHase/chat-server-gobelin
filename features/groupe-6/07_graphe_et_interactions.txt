@@ -1,0 +1,54 @@
+But de la demande & contexte
+============================
+
+Notre vue d'un serveur est un graphe : un point par message, avec des liens entre les réponses, et des grappes qui correspondent aux channels. Nous voulons aussi montrer le réseau des relations : qui répond à qui, et combien de fois. Les routes actuelles lisent les messages channel par channel, avec leur texte, ce qui est trop lourd pour ça. Dépend de 01_serveurs_et_channels, 02_messages et 05_detection_emotions.
+
+Proposition technique
+=====================
+
+Graphe d'un serveur
+-------------------
+
+GET /server/{id}/graph?limit=5000&after_id=0 : renvoie les messages de tous les channels du serveur, sans leur texte, du plus ancien au plus récent :
+{
+  "messages": [
+    {"id":12,"user_id":3,"channel":4,"reply_to_id":9,"dominant_emotion":"joy","date":"..."}
+  ],
+  "next_after_id": 12
+}
+
+limit vaut 5000 au maximum. next_after_id est nul quand il n'y a plus rien à lire. Paramètres optionnels from et to pour limiter la période.
+
+Interactions
+------------
+
+GET /server/{id}/interactions?from=2026-11-01&to=2026-11-30
+GET /channel/{id}/interactions?from=2026-11-01&to=2026-11-30
+
+from et to sont optionnels. Les routes comptent les messages qui ont un reply_to_id, et ne comptent pas les réponses à soi-même.
+
+Format de réponse, où from_user a répondu count fois à to_user :
+{
+  "users": [{"id":3,"user":"isabelle"},{"id":7,"user":"marc"}],
+  "links": [{"from_user":3,"to_user":7,"count":12},{"from_user":7,"to_user":3,"count":9}]
+}
+
+Droits
+------
+
+Routes de serveur : non-membre, 404. Route de channel : réservée aux utilisateurs qui ont accès au channel.
+
+Utilisation approximative
+==========================
+
+À chaque ouverture de la vue d'un serveur ou d'une page de statistiques, donc moyenne. Le graphe peut renvoyer un gros volume en une fois.
+
+Probléme potentiels et/ou effets secondaires
+============================================
+
+Sur un gros serveur, ces calculs peuvent devenir lents : prévoir des index sur reply_to_id et sur (channel, id), et une pagination côté client pour le graphe.
+
+Pour garder le graphe à jour en direct, le client s'abonne au WebSocket de tous les channels du serveur, ce qui multiplie les événements reçus.
+
+Ces données montrent les relations entre les membres, y compris les personnes qui ne se parlent jamais : à garder réservées aux membres.
+Seules les réponses explicites sont comptées, pas les messages échangés sans utiliser la réponse : le réseau reste partiel. Une réponse à un message supprimé ne compte plus.
