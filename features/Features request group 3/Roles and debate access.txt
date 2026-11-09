@@ -1,0 +1,19 @@
+Goal of the request
+===================
+
+Have roles in a debate (admin, debater, spectator) and let the admin of the debate decide who can join.
+
+Technical proposition
+=====================
+
+Add a "role" field and an "access_status" field (invited, accepted, refused) to the link between a user and a debate. The creator of the debate is the admin.
+
+Approximate frequency of use
+============================
+
+Medium, mostly when a debate starts and people join
+
+Potential problem / side effect of note
+=======================================
+
+If the admin leaves, the debate has no admin anymore, so we need a way to give the role to someone else.

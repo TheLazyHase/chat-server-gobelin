@@ -1,0 +1,19 @@
+Goal of the request
+===================
+
+Let users vote on the answers of a poll in a debate.
+
+Technical proposition
+=====================
+
+Add a "poll_vote" table linking a user and an answer, with a date. Only one vote per user per poll, and votes are refused once the poll is over.
+
+Approximate frequency of use
+============================
+
+Low, one vote per participant per poll
+
+Potential problem / side effect of note
+=======================================
+
+Users could vote twice on the same poll if the rule is not enforced.

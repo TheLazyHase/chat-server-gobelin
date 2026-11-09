@@ -1,0 +1,19 @@
+Goal of the request
+===================
+
+Have a tension score for each debate, used to change the font weight of the messages.
+
+Technical proposition
+=====================
+
+Add a "tension" field (0 to 100) to debates, computed from the agree / disagree on the recent messages.
+
+Approximate frequency of use
+============================
+
+Read very often, updated every time someone gives an opinion on a message
+
+Potential problem / side effect of note
+=======================================
+
+With very few opinions the score can jump from 0 to 100, so we need some smoothing.
