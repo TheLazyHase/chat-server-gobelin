@@ -1,0 +1,17 @@
+But de la demande & contexte
+============================
+
+Le front doit afficher ou télécharger les fichiers associés à un message.
+
+Proposition technique
+=====================
+
+Ajouter `attachments` à l’objet message en GET et par WebSocket. Pour chaque fichier, renvoyer `id`, `kind`, `mime_type`, `filename`, `size_bytes` et une `url` utilisable par les éléments HTML `img`, `video`, `audio` ou un lien de téléchargement.
+
+Utilisation approximative
+==========================
+
+À chaque affichage d’un message avec pièce jointe.
+
+Problèmes potentiels et/ou effets secondaires
+============================================

@@ -1,0 +1,19 @@
+But de la demande & contexte
+============================
+
+Un channel doit rester utilisable après avoir atteint sa limite de 100 messages.
+
+Proposition technique
+=====================
+
+Lorsqu’un nouveau message dépasse la limite, supprimer les messages les plus anciens du channel pour conserver les 100 plus récents, s'il faut vraiment conserver la limite de 100 messages.
+
+Utilisation approximative
+==========================
+
+Très souvent, à chaque nouveau message dans un channel ayant atteint 100 messages.
+
+Problèmes potentiels et/ou effets secondaires
+============================================
+
+Une réponse peut pointer vers un message supprimé. Les pièces jointes des messages supprimés doivent être traitées selon une règle explicite.

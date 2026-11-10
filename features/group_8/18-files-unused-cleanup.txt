@@ -1,0 +1,19 @@
+But de la demande & contexte
+============================
+
+Les uploads abandonnés ne doivent pas occuper le stockage indéfiniment.
+
+Proposition technique
+=====================
+
+Nettoyer automatiquement les fichiers qui ne sont référencés par aucun message après un délai à définir. Supprimer à la fois le fichier stocké et ses métadonnées.
+
+Utilisation approximative
+==========================
+
+Traitement automatique périodique, sans action de l’utilisateur.
+
+Problèmes potentiels et/ou effets secondaires
+============================================
+
+Un délai trop court peut supprimer un fichier pendant qu’un utilisateur rédige encore son message. Le nettoyage doit éviter les fichiers en cours d’association.

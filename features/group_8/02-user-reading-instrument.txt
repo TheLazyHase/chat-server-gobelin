@@ -1,0 +1,17 @@
+But de la demande & contexte
+============================
+
+Le front doit connaître l’instrument d’un utilisateur pour afficher son choix et jouer ses messages.
+
+Proposition technique
+=====================
+
+Ajouter `instrument_id` aux réponses qui contiennent un objet utilisateur, notamment la lecture du profil et les informations publiques de l’auteur.
+
+Utilisation approximative
+==========================
+
+À l’ouverture du profil et lors du chargement des conversations.
+
+Problèmes potentiels et/ou effets secondaires
+============================================

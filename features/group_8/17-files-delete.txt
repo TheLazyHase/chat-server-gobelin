@@ -1,0 +1,17 @@
+But de la demande & contexte
+============================
+
+Un utilisateur doit pouvoir annuler un upload avant d’envoyer son message.
+
+Proposition technique
+=====================
+
+Créer `DELETE /files/{id}`, réservé au propriétaire du fichier. Autoriser la suppression si le fichier n’est référencé par aucun message ; sinon renvoyer une erreur explicite.
+
+Utilisation approximative
+==========================
+
+Rare, lorsqu’un utilisateur retire une pièce jointe avant l’envoi.
+
+Problèmes potentiels et/ou effets secondaires
+============================================

@@ -1,0 +1,19 @@
+But de la demande & contexte
+============================
+
+Le front doit pouvoir retrouver un message précis, notamment pour afficher le contexte d’une réponse.
+
+Proposition technique
+=====================
+
+Créer `GET /channel/message/{id}`. Renvoyer le même objet message que dans la liste des messages, après vérification de l’accès de l’utilisateur au channel.
+
+Utilisation approximative
+==========================
+
+Lors d'une réponse ou lorsqu’un message précis manque au chargement.
+
+Problèmes potentiels et/ou effets secondaires
+============================================
+
+Le message peut avoir été supprimé par la limite de 100 messages.

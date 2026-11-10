@@ -1,0 +1,17 @@
+But de la demande & contexte
+============================
+
+Chaque utilisateur choisit un instrument qui définit le son de ses messages.
+
+Proposition technique
+=====================
+
+Ajouter un champ facultatif `instrument_id` à `POST /user` et à l’objet utilisateur stocké. Accepter une valeur issue d’un catalogue d’instruments défini avec le front. Renvoyer `instrument_id` dans la réponse, ou `null` si aucun instrument n’a été choisi.
+
+Utilisation approximative
+==========================
+
+Une fois par utilisateur, lors de l’inscription.
+
+Problèmes potentiels et/ou effets secondaires
+============================================

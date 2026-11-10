@@ -1,0 +1,19 @@
+But de la demande & contexte
+============================
+
+Un message doit pouvoir contenir des fichiers déjà uploadés par son auteur.
+
+Proposition technique
+=====================
+
+Ajouter le champ facultatif `attachments_ids` à la création d’un message. Vérifier que chaque fichier existe, appartient à l’auteur et peut être associé à ce message, puis enregistrer les associations.
+
+Utilisation approximative
+==========================
+
+Souvent, pour chaque message comportant une pièce jointe.
+
+Problèmes potentiels et/ou effets secondaires
+============================================
+
+Un utilisateur ne doit pas pouvoir joindre le fichier d’un autre.
