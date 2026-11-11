@@ -40,6 +40,12 @@ type EnterChannelRequest struct {
 	ChannelName string `json:"channel" binding:"required"`
 }
 
+//Sent to the channel members when someone joins
+type channelJoinedEvent struct {
+	Channel channels.Channel `json:"channel"`
+	User    websockets.User  `json:"user"`
+}
+
 func (h channelHandler) Create(writer http.ResponseWriter, request *http.Request) {
 	ctx := request.Context()
 
@@ -67,8 +73,7 @@ func (h channelHandler) Create(writer http.ResponseWriter, request *http.Request
 	if req.Metadata != nil {
 		namespace := internal.GetNamespace(ctx)
 		if namespace == "" {
-			log.Printf("Metadatas given without namespace")
-			writer.WriteHeader(http.StatusInternalServerError)
+			writeMissingNamespace(writer)
 			return
 		}
 		namespacedMeta[namespace] = *req.Metadata
@@ -140,6 +145,7 @@ func (h channelHandler) EnterChannel(writer http.ResponseWriter, request *http.R
 		writer.WriteHeader(http.StatusInternalServerError)
 		return
 	}
+	channel.Metadata = internal.FilterMetadata(channel.Metadata, internal.GetNamespace(ctx))
 
 	result, err := json.Marshal(channel)
 	if err != nil {
@@ -147,7 +153,13 @@ func (h channelHandler) EnterChannel(writer http.ResponseWriter, request *http.R
 		writer.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	h.hub.Broadcast(result, []int64{channel.ID})
+	joined, err := json.Marshal(channelJoinedEvent{Channel: *channel, User: websockets.User{ID: user.ID, Username: user.Username}})
+	if err != nil {
+		log.Printf("Error marshaling value: %s", err.Error())
+		writer.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	h.hub.Broadcast(websockets.ChannelJoined, joined, []int64{channel.ID})
 	writer.WriteHeader(http.StatusOK)
 	writer.Write(result)
 }
@@ -185,8 +197,7 @@ func (h channelHandler) EditChannel(writer http.ResponseWriter, request *http.Re
 	if req.Metadata != nil {
 		namespace := internal.GetNamespace(ctx)
 		if namespace == "" {
-			log.Printf("Metadatas given without namespace")
-			writer.WriteHeader(http.StatusInternalServerError)
+			writeMissingNamespace(writer)
 			return
 		}
 		namespacedMeta[namespace] = *req.Metadata
@@ -200,11 +211,11 @@ func (h channelHandler) EditChannel(writer http.ResponseWriter, request *http.Re
 
 	channel, err = h.channelRepo.Edit(ctx, *channel, req.Name, meta)
 	if err != nil {
-		log.Printf("Error editing message: %s", err.Error())
+		log.Printf("Error editing channel: %s", err.Error())
 		writer.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	channel.Metadata = namespacedMeta
+	channel.Metadata = internal.FilterMetadata(channel.Metadata, internal.GetNamespace(ctx))
 
 	result, err := json.Marshal(channel)
 	if err != nil {
@@ -212,7 +223,7 @@ func (h channelHandler) EditChannel(writer http.ResponseWriter, request *http.Re
 		writer.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	h.hub.Broadcast(result, []int64{channel.ID})
+	h.hub.Broadcast(websockets.ChannelEdited, result, []int64{channel.ID})
 	writer.WriteHeader(http.StatusOK)
 	writer.Write(result)
 }

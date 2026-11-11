@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"time"
 
+	"chat-gobelin-api/internal"
 	"chat-gobelin-api/internal/users"
 	"chat-gobelin-api/internal/channels"
 
@@ -55,15 +56,9 @@ func (r *repo) GetByChannel(ctx context.Context, channel channels.Channel) ([]Me
 	}
 
 	for i, message := range messages {
-		if message.Anonymous {
-			messages[i].User = "anonymous"
-		}
-		var metadata map[string]json.RawMessage
-		if len(message.RawMetadata) > 0 {
-			err = json.Unmarshal(message.RawMetadata, &metadata)
-			if err != nil {
-				return messages, fmt.Errorf("Error unmarshaling metadata: %w for %s", err, message.RawMetadata)
-			}
+		metadata, err := internal.DecodeMetadata(message.RawMetadata)
+		if err != nil {
+			return messages, fmt.Errorf("Error unmarshaling metadata: %w for %s", err, message.RawMetadata)
 		}
 		messages[i].Metadata = metadata
 	}
@@ -93,12 +88,9 @@ func (r *repo) GetByID(ctx context.Context, id int64) (*Message, error) {
 		return &message, fmt.Errorf("Error retrieving message by id: %w", err)
 	}
 
-	var metadata map[string]json.RawMessage
-	if len(message.RawMetadata) > 0 {
-		err = json.Unmarshal(message.RawMetadata, &metadata)
-		if err != nil {
-			return &message, fmt.Errorf("Error unmarshaling metadata: %w", err)
-		}
+	metadata, err := internal.DecodeMetadata(message.RawMetadata)
+	if err != nil {
+		return &message, fmt.Errorf("Error unmarshaling metadata: %w", err)
 	}
 	message.Metadata = metadata
 
@@ -106,6 +98,11 @@ func (r *repo) GetByID(ctx context.Context, id int64) (*Message, error) {
 }
 
 func (r *repo) Create(ctx context.Context, content string, rawMetadata json.RawMessage, channel channels.Channel, user users.User, anonymous bool, createdAt *time.Time) (*Message, error) {
+	//The column is NOT NULL, a nil value would be inserted as NULL
+	if rawMetadata == nil {
+		rawMetadata = json.RawMessage(`{}`)
+	}
+
 	var message Message
 	if createdAt == nil {
 		query := `INSERT INTO messages
@@ -129,9 +126,6 @@ func (r *repo) Create(ctx context.Context, content string, rawMetadata json.RawM
 		}
 	}
 	message.User = user.Username
-	if message.Anonymous {
-		message.User = "anonymous"
-	}
 	message.RawMetadata = rawMetadata
 	return &message, nil
 }
@@ -142,52 +136,17 @@ func (r *repo) Edit(ctx context.Context, message Message, content string, rawMet
 		return &message, nil
 	}
 
-	var editedMessage Message
-
-	if content == "" {
-		query := `UPDATE messages SET
-			metadata = ?
-			WHERE id = ?
-			RETURNING id, channel_id, content, metadata`
-		query = r.db.Rebind(query)
-		err := r.db.GetContext(ctx, &editedMessage, query, []byte(rawMetadata), message.ID)
-		if err != nil {
-			return nil, fmt.Errorf("Error updating message metadata: %w", err)
-		}
-	} else if rawMetadata == nil {
-		query := `UPDATE messages SET
-			content = ?
-			WHERE id = ?
-			RETURNING id, channel_id, content, metadata`
-		query = r.db.Rebind(query)
-		err := r.db.GetContext(ctx, &editedMessage, query, content, message.ID)
-		if err != nil {
-			return nil, fmt.Errorf("Error updating message: %w", err)
-		}
-	} else {
-		query := `UPDATE messages SET
-			content = ?,
-			metadata = ?
-			WHERE id = ?
-			RETURNING id, channel_id, content, metadata`
-		query = r.db.Rebind(query)
-		err := r.db.GetContext(ctx, &editedMessage, query, content, []byte(rawMetadata), message.ID)
-		if err != nil {
-			return nil, fmt.Errorf("Error updating message: %w", err)
-		}
+	//An empty content or a nil metadata keeps the current value
+	query := `UPDATE messages SET
+		content = COALESCE(NULLIF(?, ''), content),
+		metadata = COALESCE(?, metadata)
+		WHERE id = ?`
+	query = r.db.Rebind(query)
+	_, err := r.db.ExecContext(ctx, query, content, []byte(rawMetadata), message.ID)
+	if err != nil {
+		return nil, fmt.Errorf("Error updating message: %w", err)
 	}
 
-	if rawMetadata != nil {
-		var metadata map[string]json.RawMessage
-		err := json.Unmarshal(rawMetadata, &metadata)
-		if err != nil {
-			return nil, fmt.Errorf("Error unmarshaling edited metadata for user: %w", err)
-		}
-		editedMessage.Metadata = metadata
-	} else {
-		editedMessage.Metadata = message.Metadata
-	}
-	editedMessage.User = message.User
-
-	return &editedMessage, nil
+	//Read back the whole message, the update only knows the edited columns
+	return r.GetByID(ctx, message.ID)
 }

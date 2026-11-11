@@ -129,22 +129,19 @@ func (h userHandler) Me(writer http.ResponseWriter, request *http.Request) {
 		return
 	}
 
+	namespace := internal.GetNamespace(ctx)
+	for i := range channels {
+		channels[i].Metadata = internal.FilterMetadata(channels[i].Metadata, namespace)
+	}
+
 	presentation := UserPresentation{
 		Username: user.Username,
 		ID: user.ID,
 		Channels: channels,
 	}
-	log.Printf("test: %v %s", user, internal.GetNamespace(ctx))
+	log.Printf("test: %v %s", user, namespace)
 	if user.Metadata != nil {
-		meta := user.Metadata
-		namespace := internal.GetNamespace(ctx)
-		if namespace != "" {
-			meta = make(map[string]json.RawMessage)
-			if namespaced, ok := user.Metadata[namespace]; ok {
-				meta[namespace] = namespaced
-			}
-		}
-		rawMeta, err := json.Marshal(meta)
+		rawMeta, err := json.Marshal(internal.FilterMetadata(user.Metadata, namespace))
 		if err != nil {
 			log.Printf("Error namespacing metadatas: %s", err.Error())
 			writer.WriteHeader(http.StatusInternalServerError)
@@ -191,8 +188,7 @@ func (h userHandler) Create(writer http.ResponseWriter, request *http.Request) {
 		meta = *req.Metadata
 		namespace := internal.GetNamespace(ctx)
 		if namespace == "" {
-			log.Printf("Metadatas given without namespace")
-			writer.WriteHeader(http.StatusInternalServerError)
+			writeMissingNamespace(writer)
 			return
 		}
 		namespacedMeta := make(map[string]json.RawMessage)
@@ -235,8 +231,7 @@ func (h userHandler) Edit(writer http.ResponseWriter, request *http.Request) {
 
 	namespace := internal.GetNamespace(ctx)
 	if namespace == "" {
-		log.Printf("Metadatas given without namespace")
-		writer.WriteHeader(http.StatusInternalServerError)
+		writeMissingNamespace(writer)
 		return
 	}
 
@@ -272,6 +267,7 @@ func (h userHandler) Edit(writer http.ResponseWriter, request *http.Request) {
 		writer.WriteHeader(http.StatusInternalServerError)
 		return
 	}
+	user.Metadata = internal.FilterMetadata(user.Metadata, namespace)
 
 	result, err := json.Marshal(user)
 	if err != nil {

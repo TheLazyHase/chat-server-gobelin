@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"chat-gobelin-api/internal"
+
 	"github.com/jmoiron/sqlx"
 )
 
@@ -41,12 +43,9 @@ func (r *repo) GetByUserName(ctx context.Context, username string) (*User, error
 		return &user, fmt.Errorf("Error retrieving users by username: %w", err)
 	}
 
-	var metadata map[string]json.RawMessage
-	if len(user.RawMetadata) > 0 {
-		err = json.Unmarshal(user.RawMetadata, &metadata)
-		if err != nil {
-			return &user, fmt.Errorf("Error unmarshaling metadata: %w", err)
-		}
+	metadata, err := internal.DecodeMetadata(user.RawMetadata)
+	if err != nil {
+		return &user, fmt.Errorf("Error unmarshaling metadata: %w", err)
 	}
 	user.Metadata = metadata
 
@@ -68,12 +67,9 @@ func (r *repo) GetByID(ctx context.Context, id int64) (*User, error) {
 		return &user, fmt.Errorf("Error retrieving user by id: %w", err)
 	}
 
-	var metadata map[string]json.RawMessage
-	if len(user.RawMetadata) > 0 {
-		err = json.Unmarshal(user.RawMetadata, &metadata)
-		if err != nil {
-			return &user, fmt.Errorf("Error unmarshaling metadata: %w", err)
-		}
+	metadata, err := internal.DecodeMetadata(user.RawMetadata)
+	if err != nil {
+		return &user, fmt.Errorf("Error unmarshaling metadata: %w", err)
 	}
 	user.Metadata = metadata
 
@@ -82,8 +78,7 @@ func (r *repo) GetByID(ctx context.Context, id int64) (*User, error) {
 
 func (r *repo) Create(ctx context.Context, name string, rawMetadata json.RawMessage, passwordHash []byte) (*User, error) {
 
-	var metadata map[string]json.RawMessage
-	err := json.Unmarshal(rawMetadata, &metadata)
+	metadata, err := internal.DecodeMetadata(rawMetadata)
 	if err != nil {
 		return nil, fmt.Errorf("Error unmarshaling metadata for new user: %w", err)
 	}
@@ -105,8 +100,7 @@ func (r *repo) Create(ctx context.Context, name string, rawMetadata json.RawMess
 
 func (r *repo) EditMetadata(ctx context.Context, user User, rawMetadata json.RawMessage) (*User, error) {
 
-	var metadata map[string]json.RawMessage
-	err := json.Unmarshal(rawMetadata, &metadata)
+	metadata, err := internal.DecodeMetadata(rawMetadata)
 	if err != nil {
 		return nil, fmt.Errorf("Error unmarshaling new metadata for user: %w", err)
 	}

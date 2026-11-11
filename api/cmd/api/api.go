@@ -72,7 +72,7 @@ func main() {
 
 	generalChannel, _ := channelRepo.GetByName(ctx, "general")
 	if generalChannel == nil {
-		generalChannel, err = channelRepo.Create(ctx, "general", json.RawMessage(`[]`))
+		generalChannel, err = channelRepo.Create(ctx, "general", json.RawMessage(`{}`))
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -92,7 +92,7 @@ func main() {
 			case <- ctx.Done():
 				return
 			case _ = <-ticker.C:
-				messageRepo.Create(ctx, fmt.Sprintf("clock tick : %s", time.Now().Format(time.UnixDate)), json.RawMessage(`[]`), *generalChannel, *internalUser, true, nil)
+				messageRepo.Create(ctx, fmt.Sprintf("clock tick : %s", time.Now().Format(time.UnixDate)), json.RawMessage(`{}`), *generalChannel, *internalUser, true, nil)
 			}
 		}
 	}()
@@ -130,6 +130,7 @@ func main() {
 	/*router.HandleFunc("/channel", channelHandler.Get).Methods(http.MethodGet)*/
 	router.HandleFunc("/channel", channelHandler.Create).Methods(http.MethodPost)
 	router.HandleFunc("/channel/enter", channelHandler.EnterChannel).Methods(http.MethodPost)
+	router.HandleFunc("/channel/edit", channelHandler.EditChannel).Methods(http.MethodPost)
 	router.HandleFunc("/channel/message", messageHandler.GetMessages).Methods(http.MethodGet)
 	router.HandleFunc("/channel/message", messageHandler.CreateMessage).Methods(http.MethodPost)
 	router.HandleFunc("/channel/message", messageHandler.EditMessage).Methods(http.MethodPut)
@@ -155,7 +156,7 @@ func setAccessControlHeader(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Access-Control-Allow-Origin", "*")
 		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
-		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization, Namespace")
 		next.ServeHTTP(w, r)
 	})
 }
@@ -173,6 +174,10 @@ func (amw *authenticationMiddleware) authMiddleware(next http.Handler) http.Hand
 			return
 		}
 		tokenStr := strings.TrimPrefix(r.Header.Get("Authorization"), "Bearer ")
+		//Browsers can't set headers on a websocket, the token comes in the query instead
+		if tokenStr == "" && strings.TrimPrefix(r.URL.Path, "/") == "socket" {
+			tokenStr = r.URL.Query().Get("token")
+		}
 		if tokenStr == "" {
 			log.Printf("No token")
 			http.Error(w, "Unauthorized", http.StatusUnauthorized)

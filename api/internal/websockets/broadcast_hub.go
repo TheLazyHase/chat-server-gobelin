@@ -1,9 +1,12 @@
 package websockets
 
 import (
+	"encoding/json"
 	"log"
 	"net/http"
 	"strconv"
+
+	"chat-gobelin-api/internal/users"
 )
 
 type BroadcastHub struct {
@@ -22,16 +25,29 @@ type BroadcastHub struct {
 
 // serveWs handles websocket requests from the peer.
 func (hub *BroadcastHub) ServeWS(writer http.ResponseWriter, request *http.Request) {
-	channelIDString := request.URL.Query().Get("channel")
-	if channelIDString == "" {
+	//One socket can watch several channels: ?channel=1&channel=2
+	channelIDStrings := request.URL.Query()["channel"]
+	if len(channelIDStrings) == 0 {
 		log.Printf("No channel found: %s", request.URL.RawQuery)
 		writer.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	channelID, err := strconv.ParseInt(channelIDString, 10, 64)
-	if err != nil {
-		log.Printf("Error converting channel ID: %s", err.Error())
-		writer.WriteHeader(http.StatusInternalServerError)
+	channels := make(map[int64]struct{})
+	for _, channelIDString := range channelIDStrings {
+		channelID, err := strconv.ParseInt(channelIDString, 10, 64)
+		if err != nil {
+			log.Printf("Error converting channel ID: %s", err.Error())
+			writer.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		channels[channelID] = struct{}{}
+	}
+
+	//Set by the authentication middleware, events sent by the client are signed with it
+	user, ok := request.Context().Value("user").(*users.User)
+	if !ok || user == nil {
+		log.Printf("No user found")
+		writer.WriteHeader(http.StatusUnauthorized)
 		return
 	}
 
@@ -40,9 +56,7 @@ func (hub *BroadcastHub) ServeWS(writer http.ResponseWriter, request *http.Reque
 		log.Println(err)
 		return
 	}
-	channels := make(map[int64]struct{})
-	channels[channelID] = struct{}{}
-	client := &Websocket{hub: hub, conn: conn, send: make(chan []byte, 256), channels: channels}
+	client := &Websocket{hub: hub, conn: conn, send: make(chan []byte, 256), channels: channels, user: User{ID: user.ID, Username: user.Username}}
 	client.hub.register <- client
 
 	// Allow collection of memory referenced by the caller by doing all work in
@@ -93,7 +107,32 @@ func (h *BroadcastHub) Run() {
 	}
 }
 
-func (h *BroadcastHub) Broadcast(body []byte, channel []int64) {
+//Event types, so clients can tell the payloads apart
+const (
+	MessageCreated = "message.created"
+	MessageEdited  = "message.edited"
+	ChannelJoined  = "channel.joined"
+	ChannelEdited  = "channel.edited"
+	UserTyping     = "user.typing"
+)
+
+type event struct {
+	Type string          `json:"type"`
+	Data json.RawMessage `json:"data"`
+}
+
+//Public part of a user, for the events that say who did something
+type User struct {
+	ID       int64  `json:"id"`
+	Username string `json:"username"`
+}
+
+func (h *BroadcastHub) Broadcast(eventType string, data json.RawMessage, channel []int64) {
+	body, err := json.Marshal(event{Type: eventType, Data: data})
+	if err != nil {
+		log.Printf("Error marshaling event: %s", err.Error())
+		return
+	}
 	m := message{
 		Body: body,
 		Channel: channel,

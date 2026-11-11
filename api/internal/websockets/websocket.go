@@ -2,7 +2,9 @@ package websockets
 
 import (
 	"bytes"
+	"encoding/json"
 	"log"
+	"net/http"
 	"time"
 
 	"github.com/gorilla/websocket"
@@ -25,6 +27,8 @@ const (
 var upgrader = websocket.Upgrader{
 	ReadBufferSize:  1024,
 	WriteBufferSize: 1024,
+	//Clients are served from other origins, as the REST API allows with its CORS headers
+	CheckOrigin: func(r *http.Request) bool { return true },
 }
 
 var (
@@ -43,6 +47,58 @@ type Websocket struct {
 
 	//Channels to watch
 	channels map[int64]struct{}
+
+	//Logged in user who opened the socket
+	user User
+}
+
+//Events clients can send on their socket
+const (
+	Typing = "typing"
+)
+
+type typingData struct {
+	ChannelID int64 `json:"channel_id"`
+	Typing    bool  `json:"typing"`
+}
+
+//Sent to a channel when someone starts or stops typing in it
+type typingEvent struct {
+	ChannelID int64 `json:"channel_id"`
+	Typing    bool  `json:"typing"`
+	User      User  `json:"user"`
+}
+
+func (w *Websocket) handleClientEvent(body []byte) {
+	var e event
+	err := json.Unmarshal(body, &e)
+	if err != nil {
+		log.Printf("Error decoding client event: %s", err.Error())
+		return
+	}
+
+	switch e.Type {
+	case Typing:
+		var data typingData
+		err = json.Unmarshal(e.Data, &data)
+		if err != nil {
+			log.Printf("Error decoding typing event: %s", err.Error())
+			return
+		}
+		//Only to the channels this socket watches
+		if !w.IsInterested([]int64{data.ChannelID}) {
+			log.Printf("Typing event for unwatched channel %d", data.ChannelID)
+			return
+		}
+		payload, err := json.Marshal(typingEvent{ChannelID: data.ChannelID, Typing: data.Typing, User: w.user})
+		if err != nil {
+			log.Printf("Error marshaling typing event: %s", err.Error())
+			return
+		}
+		w.hub.Broadcast(UserTyping, payload, []int64{data.ChannelID})
+	default:
+		log.Printf("Unknown client event: %s", e.Type)
+	}
 }
 
 func (w *Websocket) IsInterested(channelIDs []int64) bool {
@@ -77,6 +133,7 @@ func (w *Websocket) readPump() {
 		}
 		message = bytes.TrimSpace(bytes.Replace(message, newline, space, -1))
 		log.Printf("Message is: %s", message)
+		w.handleClientEvent(message)
 	}
 }
 
@@ -102,22 +159,9 @@ func (w *Websocket) writePump() {
 				return
 			}
 
-			writer, err := w.conn.NextWriter(websocket.TextMessage)
-			if err != nil {
+			// One event per websocket message, so each one is a single JSON document
+			if err := w.conn.WriteMessage(websocket.TextMessage, message); err != nil {
 				log.Printf("error on writing: %s", err.Error())
-				return
-			}
-			writer.Write(message)
-
-			// Add queued chat messages to the current websocket message.
-			n := len(w.send)
-			for i := 0; i < n; i++ {
-				writer.Write(newline)
-				writer.Write(<-w.send)
-			}
-
-			if err := writer.Close(); err != nil {
-				log.Printf("error on closing writer: %s", err.Error())
 				return
 			}
 		case <-ticker.C:

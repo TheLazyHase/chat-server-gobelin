@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"chat-gobelin-api/internal"
 	"chat-gobelin-api/internal/users"
 
 	"github.com/jmoiron/sqlx"
@@ -46,7 +47,7 @@ func (r *repo) GetByUser(ctx context.Context, user users.User) ([]Channel, error
 	if err != nil {
 		return channels, fmt.Errorf("Error retrieving channels: %w", err)
 	}
-	return channels, nil
+	return channels, decodeAll(channels)
 }
 
 func (r *repo) GetAllChannels(ctx context.Context) ([]Channel, error) {
@@ -62,7 +63,7 @@ func (r *repo) GetAllChannels(ctx context.Context) ([]Channel, error) {
 	if err != nil {
 		return channels, fmt.Errorf("Error retrieving channels: %w", err)
 	}
-	return channels, nil
+	return channels, decodeAll(channels)
 }
 
 func (r *repo) GetByName(ctx context.Context, name string) (*Channel, error) {
@@ -80,7 +81,7 @@ func (r *repo) GetByName(ctx context.Context, name string) (*Channel, error) {
 	if err != nil {
 		return nil, fmt.Errorf("Error retrieving channels: %w", err)
 	}
-	return &channel, nil
+	return &channel, decode(&channel)
 }
 
 func (r *repo) GetByID(ctx context.Context, id int64) (*Channel, error) {
@@ -98,13 +99,18 @@ func (r *repo) GetByID(ctx context.Context, id int64) (*Channel, error) {
 	if err != nil {
 		return nil, fmt.Errorf("Error retrieving channels: %w", err)
 	}
-	return &channel, nil
+	return &channel, decode(&channel)
 }
 
 func (r *repo) Create(ctx context.Context, name string, metadata json.RawMessage) (*Channel, error) {
 	query := `INSERT INTO channels
 		(name, metadata, creation_date) VALUES (?, ?, NOW())
 		RETURNING id, name, metadata, creation_date`
+
+	//The column is NOT NULL, a nil value would be inserted as NULL
+	if metadata == nil {
+		metadata = json.RawMessage(`{}`)
+	}
 
 	query = r.db.Rebind(query)
 	var channel Channel
@@ -114,7 +120,26 @@ func (r *repo) Create(ctx context.Context, name string, metadata json.RawMessage
 	}
 
 	//TODO: add creator to it
-	return &channel, nil
+	return &channel, decode(&channel)
+}
+
+func decode(channel *Channel) error {
+	metadata, err := internal.DecodeMetadata(channel.RawMetadata)
+	if err != nil {
+		return fmt.Errorf("Error unmarshaling metadata of channel %d: %w", channel.ID, err)
+	}
+	channel.Metadata = metadata
+	return nil
+}
+
+func decodeAll(channels []Channel) error {
+	for i := range channels {
+		err := decode(&channels[i])
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func (r *repo) AddUserToChannel(ctx context.Context, channel Channel, user users.User) error {
@@ -132,25 +157,17 @@ func (r *repo) AddUserToChannel(ctx context.Context, channel Channel, user users
 }
 
 func (r *repo) Edit(ctx context.Context, channel Channel, content string, rawMetadata json.RawMessage) (*Channel, error) {
-	var editedChannel Channel
-
-	query := `UPDATE channel SET
-		name = ?,
-		metadata = ?
-		WHERE id = ?
-		RETURNING id, name, metadata`
+	//An empty name or a nil metadata keeps the current value
+	query := `UPDATE channels SET
+		name = COALESCE(NULLIF(?, ''), name),
+		metadata = COALESCE(?, metadata)
+		WHERE id = ?`
 	query = r.db.Rebind(query)
-	err := r.db.GetContext(ctx, &editedChannel, query, content, []byte(rawMetadata), channel.ID)
+	_, err := r.db.ExecContext(ctx, query, content, []byte(rawMetadata), channel.ID)
 	if err != nil {
 		return nil, fmt.Errorf("Error updating channel: %w", err)
 	}
 
-	var metadata map[string]json.RawMessage
-	err = json.Unmarshal(rawMetadata, &metadata)
-	if err != nil {
-		return nil, fmt.Errorf("Error unmarshaling edited metadata for user: %w", err)
-	}
-	editedChannel.Metadata = metadata
-
-	return &editedChannel, nil
+	//Read back the whole channel, the update only knows the edited columns
+	return r.GetByID(ctx, channel.ID)
 }
