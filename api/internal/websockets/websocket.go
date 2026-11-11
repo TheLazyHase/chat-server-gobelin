@@ -105,22 +105,9 @@ func (w *Websocket) writePump() {
 				return
 			}
 
-			writer, err := w.conn.NextWriter(websocket.TextMessage)
-			if err != nil {
+			// One event per websocket message, so each one is a single JSON document
+			if err := w.conn.WriteMessage(websocket.TextMessage, message); err != nil {
 				log.Printf("error on writing: %s", err.Error())
-				return
-			}
-			writer.Write(message)
-
-			// Add queued chat messages to the current websocket message.
-			n := len(w.send)
-			for i := 0; i < n; i++ {
-				writer.Write(newline)
-				writer.Write(<-w.send)
-			}
-
-			if err := writer.Close(); err != nil {
-				log.Printf("error on closing writer: %s", err.Error())
 				return
 			}
 		case <-ticker.C:

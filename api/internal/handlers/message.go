@@ -154,7 +154,7 @@ func (h messageHandler) CreateMessage(writer http.ResponseWriter, request *http.
 	}
 	//Scheduled messages reach the sockets when they're posted, as they reach GET /channel/message
 	if message.IsPosted() {
-		h.hub.Broadcast(result, []int64{channel.ID})
+		h.hub.Broadcast(websockets.MessageCreated, result, []int64{channel.ID})
 	} else {
 		h.scheduleBroadcast(*message, internal.GetNamespace(ctx))
 	}
@@ -223,7 +223,7 @@ func (h messageHandler) EditMessage(writer http.ResponseWriter, request *http.Re
 	}
 	//Clients get scheduled messages when they're posted, with their latest edits
 	if message.IsPosted() {
-		h.hub.Broadcast(result, []int64{message.ChannelID})
+		h.hub.Broadcast(websockets.MessageEdited, result, []int64{message.ChannelID})
 	}
 	writer.WriteHeader(http.StatusOK)
 	writer.Write(result)
@@ -252,6 +252,6 @@ func (h messageHandler) scheduleBroadcast(message messages.Message, namespace st
 			log.Printf("Error marshaling value: %s", err.Error())
 			return
 		}
-		h.hub.Broadcast(result, []int64{posted.ChannelID})
+		h.hub.Broadcast(websockets.MessageCreated, result, []int64{posted.ChannelID})
 	})
 }

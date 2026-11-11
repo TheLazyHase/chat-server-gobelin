@@ -1,6 +1,7 @@
 package websockets
 
 import (
+	"encoding/json"
 	"log"
 	"net/http"
 	"strconv"
@@ -93,7 +94,25 @@ func (h *BroadcastHub) Run() {
 	}
 }
 
-func (h *BroadcastHub) Broadcast(body []byte, channel []int64) {
+//Event types, so clients can tell the payloads apart
+const (
+	MessageCreated = "message.created"
+	MessageEdited  = "message.edited"
+	ChannelJoined  = "channel.joined"
+	ChannelEdited  = "channel.edited"
+)
+
+type event struct {
+	Type string          `json:"type"`
+	Data json.RawMessage `json:"data"`
+}
+
+func (h *BroadcastHub) Broadcast(eventType string, data json.RawMessage, channel []int64) {
+	body, err := json.Marshal(event{Type: eventType, Data: data})
+	if err != nil {
+		log.Printf("Error marshaling event: %s", err.Error())
+		return
+	}
 	m := message{
 		Body: body,
 		Channel: channel,

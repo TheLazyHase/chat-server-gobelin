@@ -40,6 +40,17 @@ type EnterChannelRequest struct {
 	ChannelName string `json:"channel" binding:"required"`
 }
 
+//Sent to the channel members when someone joins
+type channelJoinedEvent struct {
+	Channel channels.Channel `json:"channel"`
+	User    joinedUser       `json:"user"`
+}
+
+type joinedUser struct {
+	ID       int64  `json:"id"`
+	Username string `json:"username"`
+}
+
 func (h channelHandler) Create(writer http.ResponseWriter, request *http.Request) {
 	ctx := request.Context()
 
@@ -146,7 +157,13 @@ func (h channelHandler) EnterChannel(writer http.ResponseWriter, request *http.R
 		writer.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	h.hub.Broadcast(result, []int64{channel.ID})
+	joined, err := json.Marshal(channelJoinedEvent{Channel: *channel, User: joinedUser{ID: user.ID, Username: user.Username}})
+	if err != nil {
+		log.Printf("Error marshaling value: %s", err.Error())
+		writer.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	h.hub.Broadcast(websockets.ChannelJoined, joined, []int64{channel.ID})
 	writer.WriteHeader(http.StatusOK)
 	writer.Write(result)
 }
@@ -210,7 +227,7 @@ func (h channelHandler) EditChannel(writer http.ResponseWriter, request *http.Re
 		writer.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	h.hub.Broadcast(result, []int64{channel.ID})
+	h.hub.Broadcast(websockets.ChannelEdited, result, []int64{channel.ID})
 	writer.WriteHeader(http.StatusOK)
 	writer.Write(result)
 }
