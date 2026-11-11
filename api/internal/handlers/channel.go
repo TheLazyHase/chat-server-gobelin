@@ -43,12 +43,7 @@ type EnterChannelRequest struct {
 //Sent to the channel members when someone joins
 type channelJoinedEvent struct {
 	Channel channels.Channel `json:"channel"`
-	User    joinedUser       `json:"user"`
-}
-
-type joinedUser struct {
-	ID       int64  `json:"id"`
-	Username string `json:"username"`
+	User    websockets.User  `json:"user"`
 }
 
 func (h channelHandler) Create(writer http.ResponseWriter, request *http.Request) {
@@ -158,7 +153,7 @@ func (h channelHandler) EnterChannel(writer http.ResponseWriter, request *http.R
 		writer.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	joined, err := json.Marshal(channelJoinedEvent{Channel: *channel, User: joinedUser{ID: user.ID, Username: user.Username}})
+	joined, err := json.Marshal(channelJoinedEvent{Channel: *channel, User: websockets.User{ID: user.ID, Username: user.Username}})
 	if err != nil {
 		log.Printf("Error marshaling value: %s", err.Error())
 		writer.WriteHeader(http.StatusInternalServerError)

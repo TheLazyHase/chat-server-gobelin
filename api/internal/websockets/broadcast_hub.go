@@ -5,6 +5,8 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+
+	"chat-gobelin-api/internal/users"
 )
 
 type BroadcastHub struct {
@@ -41,12 +43,20 @@ func (hub *BroadcastHub) ServeWS(writer http.ResponseWriter, request *http.Reque
 		channels[channelID] = struct{}{}
 	}
 
+	//Set by the authentication middleware, events sent by the client are signed with it
+	user, ok := request.Context().Value("user").(*users.User)
+	if !ok || user == nil {
+		log.Printf("No user found")
+		writer.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+
 	conn, err := upgrader.Upgrade(writer, request, nil)
 	if err != nil {
 		log.Println(err)
 		return
 	}
-	client := &Websocket{hub: hub, conn: conn, send: make(chan []byte, 256), channels: channels}
+	client := &Websocket{hub: hub, conn: conn, send: make(chan []byte, 256), channels: channels, user: User{ID: user.ID, Username: user.Username}}
 	client.hub.register <- client
 
 	// Allow collection of memory referenced by the caller by doing all work in
@@ -103,11 +113,18 @@ const (
 	MessageEdited  = "message.edited"
 	ChannelJoined  = "channel.joined"
 	ChannelEdited  = "channel.edited"
+	UserTyping     = "user.typing"
 )
 
 type event struct {
 	Type string          `json:"type"`
 	Data json.RawMessage `json:"data"`
+}
+
+//Public part of a user, for the events that say who did something
+type User struct {
+	ID       int64  `json:"id"`
+	Username string `json:"username"`
 }
 
 func (h *BroadcastHub) Broadcast(eventType string, data json.RawMessage, channel []int64) {
