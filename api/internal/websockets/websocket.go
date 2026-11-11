@@ -3,6 +3,7 @@ package websockets
 import (
 	"bytes"
 	"log"
+	"net/http"
 	"time"
 
 	"github.com/gorilla/websocket"
@@ -25,6 +26,8 @@ const (
 var upgrader = websocket.Upgrader{
 	ReadBufferSize:  1024,
 	WriteBufferSize: 1024,
+	//Clients are served from other origins, as the REST API allows with its CORS headers
+	CheckOrigin: func(r *http.Request) bool { return true },
 }
 
 var (
