@@ -157,25 +157,17 @@ func (r *repo) AddUserToChannel(ctx context.Context, channel Channel, user users
 }
 
 func (r *repo) Edit(ctx context.Context, channel Channel, content string, rawMetadata json.RawMessage) (*Channel, error) {
-	var editedChannel Channel
-
-	query := `UPDATE channel SET
-		name = ?,
-		metadata = ?
-		WHERE id = ?
-		RETURNING id, name, metadata`
+	//An empty name or a nil metadata keeps the current value
+	query := `UPDATE channels SET
+		name = COALESCE(NULLIF(?, ''), name),
+		metadata = COALESCE(?, metadata)
+		WHERE id = ?`
 	query = r.db.Rebind(query)
-	err := r.db.GetContext(ctx, &editedChannel, query, content, []byte(rawMetadata), channel.ID)
+	_, err := r.db.ExecContext(ctx, query, content, []byte(rawMetadata), channel.ID)
 	if err != nil {
 		return nil, fmt.Errorf("Error updating channel: %w", err)
 	}
 
-	var metadata map[string]json.RawMessage
-	err = json.Unmarshal(rawMetadata, &metadata)
-	if err != nil {
-		return nil, fmt.Errorf("Error unmarshaling edited metadata for user: %w", err)
-	}
-	editedChannel.Metadata = metadata
-
-	return &editedChannel, nil
+	//Read back the whole channel, the update only knows the edited columns
+	return r.GetByID(ctx, channel.ID)
 }

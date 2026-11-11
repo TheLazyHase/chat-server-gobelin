@@ -130,6 +130,7 @@ func main() {
 	/*router.HandleFunc("/channel", channelHandler.Get).Methods(http.MethodGet)*/
 	router.HandleFunc("/channel", channelHandler.Create).Methods(http.MethodPost)
 	router.HandleFunc("/channel/enter", channelHandler.EnterChannel).Methods(http.MethodPost)
+	router.HandleFunc("/channel/edit", channelHandler.EditChannel).Methods(http.MethodPost)
 	router.HandleFunc("/channel/message", messageHandler.GetMessages).Methods(http.MethodGet)
 	router.HandleFunc("/channel/message", messageHandler.CreateMessage).Methods(http.MethodPost)
 	router.HandleFunc("/channel/message", messageHandler.EditMessage).Methods(http.MethodPut)

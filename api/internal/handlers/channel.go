@@ -216,11 +216,11 @@ func (h channelHandler) EditChannel(writer http.ResponseWriter, request *http.Re
 
 	channel, err = h.channelRepo.Edit(ctx, *channel, req.Name, meta)
 	if err != nil {
-		log.Printf("Error editing message: %s", err.Error())
+		log.Printf("Error editing channel: %s", err.Error())
 		writer.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	channel.Metadata = namespacedMeta
+	channel.Metadata = internal.FilterMetadata(channel.Metadata, internal.GetNamespace(ctx))
 
 	result, err := json.Marshal(channel)
 	if err != nil {
