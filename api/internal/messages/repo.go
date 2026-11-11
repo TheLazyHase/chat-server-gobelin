@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"time"
 
+	"chat-gobelin-api/internal"
 	"chat-gobelin-api/internal/users"
 	"chat-gobelin-api/internal/channels"
 
@@ -58,12 +59,9 @@ func (r *repo) GetByChannel(ctx context.Context, channel channels.Channel) ([]Me
 		if message.Anonymous {
 			messages[i].User = "anonymous"
 		}
-		var metadata map[string]json.RawMessage
-		if len(message.RawMetadata) > 0 {
-			err = json.Unmarshal(message.RawMetadata, &metadata)
-			if err != nil {
-				return messages, fmt.Errorf("Error unmarshaling metadata: %w for %s", err, message.RawMetadata)
-			}
+		metadata, err := internal.DecodeMetadata(message.RawMetadata)
+		if err != nil {
+			return messages, fmt.Errorf("Error unmarshaling metadata: %w for %s", err, message.RawMetadata)
 		}
 		messages[i].Metadata = metadata
 	}
@@ -93,12 +91,9 @@ func (r *repo) GetByID(ctx context.Context, id int64) (*Message, error) {
 		return &message, fmt.Errorf("Error retrieving message by id: %w", err)
 	}
 
-	var metadata map[string]json.RawMessage
-	if len(message.RawMetadata) > 0 {
-		err = json.Unmarshal(message.RawMetadata, &metadata)
-		if err != nil {
-			return &message, fmt.Errorf("Error unmarshaling metadata: %w", err)
-		}
+	metadata, err := internal.DecodeMetadata(message.RawMetadata)
+	if err != nil {
+		return &message, fmt.Errorf("Error unmarshaling metadata: %w", err)
 	}
 	message.Metadata = metadata
 
@@ -183,8 +178,7 @@ func (r *repo) Edit(ctx context.Context, message Message, content string, rawMet
 	}
 
 	if rawMetadata != nil {
-		var metadata map[string]json.RawMessage
-		err := json.Unmarshal(rawMetadata, &metadata)
+		metadata, err := internal.DecodeMetadata(rawMetadata)
 		if err != nil {
 			return nil, fmt.Errorf("Error unmarshaling edited metadata for user: %w", err)
 		}

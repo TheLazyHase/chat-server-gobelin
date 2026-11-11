@@ -72,7 +72,7 @@ func main() {
 
 	generalChannel, _ := channelRepo.GetByName(ctx, "general")
 	if generalChannel == nil {
-		generalChannel, err = channelRepo.Create(ctx, "general", json.RawMessage(`[]`))
+		generalChannel, err = channelRepo.Create(ctx, "general", json.RawMessage(`{}`))
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -92,7 +92,7 @@ func main() {
 			case <- ctx.Done():
 				return
 			case _ = <-ticker.C:
-				messageRepo.Create(ctx, fmt.Sprintf("clock tick : %s", time.Now().Format(time.UnixDate)), json.RawMessage(`[]`), *generalChannel, *internalUser, true, nil)
+				messageRepo.Create(ctx, fmt.Sprintf("clock tick : %s", time.Now().Format(time.UnixDate)), json.RawMessage(`{}`), *generalChannel, *internalUser, true, nil)
 			}
 		}
 	}()
