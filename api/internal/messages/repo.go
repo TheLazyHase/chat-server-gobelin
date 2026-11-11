@@ -106,6 +106,11 @@ func (r *repo) GetByID(ctx context.Context, id int64) (*Message, error) {
 }
 
 func (r *repo) Create(ctx context.Context, content string, rawMetadata json.RawMessage, channel channels.Channel, user users.User, anonymous bool, createdAt *time.Time) (*Message, error) {
+	//The column is NOT NULL, a nil value would be inserted as NULL
+	if rawMetadata == nil {
+		rawMetadata = json.RawMessage(`{}`)
+	}
+
 	var message Message
 	if createdAt == nil {
 		query := `INSERT INTO messages

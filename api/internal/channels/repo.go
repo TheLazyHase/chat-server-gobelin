@@ -106,6 +106,11 @@ func (r *repo) Create(ctx context.Context, name string, metadata json.RawMessage
 		(name, metadata, creation_date) VALUES (?, ?, NOW())
 		RETURNING id, name, metadata, creation_date`
 
+	//The column is NOT NULL, a nil value would be inserted as NULL
+	if metadata == nil {
+		metadata = json.RawMessage(`{}`)
+	}
+
 	query = r.db.Rebind(query)
 	var channel Channel
 	err := r.db.GetContext(ctx, &channel, query, name, metadata)
