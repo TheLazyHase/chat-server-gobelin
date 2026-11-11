@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"context"
 	"encoding/json"
 	"log"
 	"net/http"
@@ -151,7 +152,12 @@ func (h messageHandler) CreateMessage(writer http.ResponseWriter, request *http.
 		writer.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	h.hub.Broadcast(result, []int64{channel.ID})
+	//Scheduled messages reach the sockets when they're posted, as they reach GET /channel/message
+	if message.IsPosted() {
+		h.hub.Broadcast(result, []int64{channel.ID})
+	} else {
+		h.scheduleBroadcast(*message, internal.GetNamespace(ctx))
+	}
 	writer.WriteHeader(http.StatusOK)
 	writer.Write(result)
 }
@@ -215,7 +221,37 @@ func (h messageHandler) EditMessage(writer http.ResponseWriter, request *http.Re
 		writer.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	h.hub.Broadcast(result, []int64{message.ChannelID})
+	//Clients get scheduled messages when they're posted, with their latest edits
+	if message.IsPosted() {
+		h.hub.Broadcast(result, []int64{message.ChannelID})
+	}
 	writer.WriteHeader(http.StatusOK)
 	writer.Write(result)
+}
+
+//The broadcast is lost if the server restarts before, the message is still returned by GET /channel/message
+func (h messageHandler) scheduleBroadcast(message messages.Message, namespace string) {
+	postedAt, err := time.Parse(time.RFC3339Nano, message.PostedAt)
+	if err != nil {
+		log.Printf("Error parsing posted_at of message %d: %s", message.ID, err.Error())
+		return
+	}
+
+	time.AfterFunc(time.Until(postedAt), func() {
+		//Read again to send the latest edits
+		posted, err := h.messageRepo.GetByID(context.Background(), message.ID)
+		if err != nil {
+			log.Printf("Error retrieving scheduled message: %s", err.Error())
+			return
+		}
+		posted.Metadata = internal.FilterMetadata(posted.Metadata, namespace)
+		posted.Anonymize()
+
+		result, err := json.Marshal(posted)
+		if err != nil {
+			log.Printf("Error marshaling value: %s", err.Error())
+			return
+		}
+		h.hub.Broadcast(result, []int64{posted.ChannelID})
+	})
 }

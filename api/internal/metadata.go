@@ -19,3 +19,15 @@ func DecodeMetadata(raw []byte) (map[string]json.RawMessage, error) {
 	}
 	return metadata, nil
 }
+
+//Keeps only the given namespace, or every namespace without one
+func FilterMetadata(metadata map[string]json.RawMessage, namespace string) map[string]json.RawMessage {
+	if namespace == "" {
+		return metadata
+	}
+	filtered := make(map[string]json.RawMessage)
+	if value, ok := metadata[namespace]; ok {
+		filtered[namespace] = value
+	}
+	return filtered
+}
