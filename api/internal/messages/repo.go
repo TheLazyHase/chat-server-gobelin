@@ -56,9 +56,6 @@ func (r *repo) GetByChannel(ctx context.Context, channel channels.Channel) ([]Me
 	}
 
 	for i, message := range messages {
-		if message.Anonymous {
-			messages[i].User = "anonymous"
-		}
 		metadata, err := internal.DecodeMetadata(message.RawMetadata)
 		if err != nil {
 			return messages, fmt.Errorf("Error unmarshaling metadata: %w for %s", err, message.RawMetadata)
@@ -129,9 +126,6 @@ func (r *repo) Create(ctx context.Context, content string, rawMetadata json.RawM
 		}
 	}
 	message.User = user.Username
-	if message.Anonymous {
-		message.User = "anonymous"
-	}
 	message.RawMetadata = rawMetadata
 	return &message, nil
 }
@@ -142,51 +136,17 @@ func (r *repo) Edit(ctx context.Context, message Message, content string, rawMet
 		return &message, nil
 	}
 
-	var editedMessage Message
-
-	if content == "" {
-		query := `UPDATE messages SET
-			metadata = ?
-			WHERE id = ?
-			RETURNING id, channel_id, content, metadata`
-		query = r.db.Rebind(query)
-		err := r.db.GetContext(ctx, &editedMessage, query, []byte(rawMetadata), message.ID)
-		if err != nil {
-			return nil, fmt.Errorf("Error updating message metadata: %w", err)
-		}
-	} else if rawMetadata == nil {
-		query := `UPDATE messages SET
-			content = ?
-			WHERE id = ?
-			RETURNING id, channel_id, content, metadata`
-		query = r.db.Rebind(query)
-		err := r.db.GetContext(ctx, &editedMessage, query, content, message.ID)
-		if err != nil {
-			return nil, fmt.Errorf("Error updating message: %w", err)
-		}
-	} else {
-		query := `UPDATE messages SET
-			content = ?,
-			metadata = ?
-			WHERE id = ?
-			RETURNING id, channel_id, content, metadata`
-		query = r.db.Rebind(query)
-		err := r.db.GetContext(ctx, &editedMessage, query, content, []byte(rawMetadata), message.ID)
-		if err != nil {
-			return nil, fmt.Errorf("Error updating message: %w", err)
-		}
+	//An empty content or a nil metadata keeps the current value
+	query := `UPDATE messages SET
+		content = COALESCE(NULLIF(?, ''), content),
+		metadata = COALESCE(?, metadata)
+		WHERE id = ?`
+	query = r.db.Rebind(query)
+	_, err := r.db.ExecContext(ctx, query, content, []byte(rawMetadata), message.ID)
+	if err != nil {
+		return nil, fmt.Errorf("Error updating message: %w", err)
 	}
 
-	if rawMetadata != nil {
-		metadata, err := internal.DecodeMetadata(rawMetadata)
-		if err != nil {
-			return nil, fmt.Errorf("Error unmarshaling edited metadata for user: %w", err)
-		}
-		editedMessage.Metadata = metadata
-	} else {
-		editedMessage.Metadata = message.Metadata
-	}
-	editedMessage.User = message.User
-
-	return &editedMessage, nil
+	//Read back the whole message, the update only knows the edited columns
+	return r.GetByID(ctx, message.ID)
 }

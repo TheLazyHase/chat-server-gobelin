@@ -67,6 +67,10 @@ func (h messageHandler) GetMessages(writer http.ResponseWriter, request *http.Re
 		return
 	}
 
+	for i := range messages {
+		messages[i].Anonymize()
+	}
+
 	namespace := internal.GetNamespace(ctx)
 	if namespace != "" {
 		for i, message := range messages {
@@ -139,6 +143,7 @@ func (h messageHandler) CreateMessage(writer http.ResponseWriter, request *http.
 		return
 	}
 	message.Metadata = namespacedMeta
+	message.Anonymize()
 
 	result, err := json.Marshal(message)
 	if err != nil {
@@ -202,7 +207,7 @@ func (h messageHandler) EditMessage(writer http.ResponseWriter, request *http.Re
 		writer.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	message.Metadata = namespacedMeta
+	message.Anonymize()
 
 	result, err := json.Marshal(message)
 	if err != nil {

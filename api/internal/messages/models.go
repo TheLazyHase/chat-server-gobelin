@@ -14,3 +14,11 @@ type Message struct {
 	RawMetadata  []byte  `db:"metadata" json:"-"`
 	Metadata     map[string]json.RawMessage  `db:"-" json:"metadata"`
 }
+
+//Hides the author of an anonymous message, to call before sending it to clients
+func (m *Message) Anonymize() {
+	if m.Anonymous {
+		m.User = "anonymous"
+		m.UserID = 0
+	}
+}
