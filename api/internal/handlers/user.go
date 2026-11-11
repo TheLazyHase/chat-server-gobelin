@@ -191,8 +191,7 @@ func (h userHandler) Create(writer http.ResponseWriter, request *http.Request) {
 		meta = *req.Metadata
 		namespace := internal.GetNamespace(ctx)
 		if namespace == "" {
-			log.Printf("Metadatas given without namespace")
-			writer.WriteHeader(http.StatusInternalServerError)
+			writeMissingNamespace(writer)
 			return
 		}
 		namespacedMeta := make(map[string]json.RawMessage)
@@ -235,8 +234,7 @@ func (h userHandler) Edit(writer http.ResponseWriter, request *http.Request) {
 
 	namespace := internal.GetNamespace(ctx)
 	if namespace == "" {
-		log.Printf("Metadatas given without namespace")
-		writer.WriteHeader(http.StatusInternalServerError)
+		writeMissingNamespace(writer)
 		return
 	}
 

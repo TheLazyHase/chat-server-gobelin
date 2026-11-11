@@ -120,8 +120,7 @@ func (h messageHandler) CreateMessage(writer http.ResponseWriter, request *http.
 	if req.Metadata != nil {
 		namespace := internal.GetNamespace(ctx)
 		if namespace == "" {
-			log.Printf("Metadatas given without namespace")
-			writer.WriteHeader(http.StatusInternalServerError)
+			writeMissingNamespace(writer)
 			return
 		}
 		namespacedMeta[namespace] = *req.Metadata
@@ -185,8 +184,7 @@ func (h messageHandler) EditMessage(writer http.ResponseWriter, request *http.Re
 	if req.Metadata != nil {
 		namespace := internal.GetNamespace(ctx)
 		if namespace == "" {
-			log.Printf("Metadatas given without namespace")
-			writer.WriteHeader(http.StatusInternalServerError)
+			writeMissingNamespace(writer)
 			return
 		}
 		namespacedMeta[namespace] = *req.Metadata
