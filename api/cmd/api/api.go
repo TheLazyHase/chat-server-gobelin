@@ -173,6 +173,10 @@ func (amw *authenticationMiddleware) authMiddleware(next http.Handler) http.Hand
 			return
 		}
 		tokenStr := strings.TrimPrefix(r.Header.Get("Authorization"), "Bearer ")
+		//Browsers can't set headers on a websocket, the token comes in the query instead
+		if tokenStr == "" && strings.TrimPrefix(r.URL.Path, "/") == "socket" {
+			tokenStr = r.URL.Query().Get("token")
+		}
 		if tokenStr == "" {
 			log.Printf("No token")
 			http.Error(w, "Unauthorized", http.StatusUnauthorized)
