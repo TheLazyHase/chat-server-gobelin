@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"chat-gobelin-api/internal"
 	"chat-gobelin-api/internal/users"
 
 	"github.com/jmoiron/sqlx"
@@ -46,7 +47,7 @@ func (r *repo) GetByUser(ctx context.Context, user users.User) ([]Channel, error
 	if err != nil {
 		return channels, fmt.Errorf("Error retrieving channels: %w", err)
 	}
-	return channels, nil
+	return channels, decodeAll(channels)
 }
 
 func (r *repo) GetAllChannels(ctx context.Context) ([]Channel, error) {
@@ -62,7 +63,7 @@ func (r *repo) GetAllChannels(ctx context.Context) ([]Channel, error) {
 	if err != nil {
 		return channels, fmt.Errorf("Error retrieving channels: %w", err)
 	}
-	return channels, nil
+	return channels, decodeAll(channels)
 }
 
 func (r *repo) GetByName(ctx context.Context, name string) (*Channel, error) {
@@ -80,7 +81,7 @@ func (r *repo) GetByName(ctx context.Context, name string) (*Channel, error) {
 	if err != nil {
 		return nil, fmt.Errorf("Error retrieving channels: %w", err)
 	}
-	return &channel, nil
+	return &channel, decode(&channel)
 }
 
 func (r *repo) GetByID(ctx context.Context, id int64) (*Channel, error) {
@@ -98,7 +99,7 @@ func (r *repo) GetByID(ctx context.Context, id int64) (*Channel, error) {
 	if err != nil {
 		return nil, fmt.Errorf("Error retrieving channels: %w", err)
 	}
-	return &channel, nil
+	return &channel, decode(&channel)
 }
 
 func (r *repo) Create(ctx context.Context, name string, metadata json.RawMessage) (*Channel, error) {
@@ -119,7 +120,26 @@ func (r *repo) Create(ctx context.Context, name string, metadata json.RawMessage
 	}
 
 	//TODO: add creator to it
-	return &channel, nil
+	return &channel, decode(&channel)
+}
+
+func decode(channel *Channel) error {
+	metadata, err := internal.DecodeMetadata(channel.RawMetadata)
+	if err != nil {
+		return fmt.Errorf("Error unmarshaling metadata of channel %d: %w", channel.ID, err)
+	}
+	channel.Metadata = metadata
+	return nil
+}
+
+func decodeAll(channels []Channel) error {
+	for i := range channels {
+		err := decode(&channels[i])
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func (r *repo) AddUserToChannel(ctx context.Context, channel Channel, user users.User) error {

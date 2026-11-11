@@ -150,6 +150,7 @@ func (h channelHandler) EnterChannel(writer http.ResponseWriter, request *http.R
 		writer.WriteHeader(http.StatusInternalServerError)
 		return
 	}
+	channel.Metadata = internal.FilterMetadata(channel.Metadata, internal.GetNamespace(ctx))
 
 	result, err := json.Marshal(channel)
 	if err != nil {

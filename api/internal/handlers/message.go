@@ -68,19 +68,10 @@ func (h messageHandler) GetMessages(writer http.ResponseWriter, request *http.Re
 		return
 	}
 
-	for i := range messages {
-		messages[i].Anonymize()
-	}
-
 	namespace := internal.GetNamespace(ctx)
-	if namespace != "" {
-		for i, message := range messages {
-			prunedMeta := make(map[string]json.RawMessage)
-			if m, ok := message.Metadata[namespace]; ok {
-				prunedMeta[namespace] = m
-			}
-			messages[i].Metadata = prunedMeta
-		}
+	for i := range messages {
+		messages[i].Metadata = internal.FilterMetadata(messages[i].Metadata, namespace)
+		messages[i].Anonymize()
 	}
 
 	result, err := json.Marshal(messages)
@@ -213,6 +204,7 @@ func (h messageHandler) EditMessage(writer http.ResponseWriter, request *http.Re
 		writer.WriteHeader(http.StatusInternalServerError)
 		return
 	}
+	message.Metadata = internal.FilterMetadata(message.Metadata, internal.GetNamespace(ctx))
 	message.Anonymize()
 
 	result, err := json.Marshal(message)
