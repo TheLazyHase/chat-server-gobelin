@@ -126,9 +126,11 @@ func (h userHandler) GetAll(writer http.ResponseWriter, request *http.Request) {
 
 	presentations := make([]UserPresentation, 0, len(users))
 	for _, user := range users {
+		empty := json.RawMessage([]byte("{}"))
 		presentation := UserPresentation{
 			Username: user.Username,
 			ID: user.ID,
+			Metadata: &empty,
 		}
 		if user.Metadata != nil {
 			meta := user.Metadata

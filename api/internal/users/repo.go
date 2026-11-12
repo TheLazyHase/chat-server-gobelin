@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log"
 
 	"chat-gobelin-api/internal"
 	"github.com/jmoiron/sqlx"
@@ -106,6 +107,18 @@ func (r *repo) GetByIDs(ctx context.Context, userIDs []int64) ([]User, error) {
 	if err != nil {
 		return nil, fmt.Errorf("Error retrieving users: %w", err)
 	}
+	for i, user := range users {
+		metadata := make(map[string]json.RawMessage)
+		log.Printf("Error retrieving users: %s", user.RawMetadata)
+		//This will catch null value, [] who were introduced as a bug, and useless {}
+		if len(user.RawMetadata) > 2 {
+			err = json.Unmarshal(user.RawMetadata, &metadata)
+			if err != nil {
+				return users, fmt.Errorf("Error unmarshaling metadata: %w", err)
+			}
+		}
+		users[i].Metadata = metadata
+	}
 
 	return users, nil
 }
@@ -123,6 +136,18 @@ func (r *repo) GetAll(ctx context.Context) ([]User, error) {
 	err := r.db.SelectContext(ctx, &users, query)
 	if err != nil {
 		return nil, fmt.Errorf("Error retrieving users: %w", err)
+	}
+	for i, user := range users {
+		metadata := make(map[string]json.RawMessage)
+		log.Printf("Error retrieving users: %s", user.RawMetadata)
+		//This will catch null value, [] who were introduced as a bug, and useless {}
+		if len(user.RawMetadata) > 2 {
+			err = json.Unmarshal(user.RawMetadata, &metadata)
+			if err != nil {
+				return users, fmt.Errorf("Error unmarshaling metadata: %w", err)
+			}
+		}
+		users[i].Metadata = metadata
 	}
 
 	return users, nil
