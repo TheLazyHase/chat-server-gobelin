@@ -141,8 +141,8 @@ func main() {
 	}).Methods(http.MethodOptions)
 
 	log.Println("Application has started. Listening port is 4000")
-	http.ListenAndServe(":4000", router)
-
+	err = http.ListenAndServeTLS(":4000", "certificate/cert.pem", "certificate/privkey.pem", router)
+	log.Fatal(err)
 }
 
 func logRequests(next http.Handler) http.Handler {
