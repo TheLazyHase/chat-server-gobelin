@@ -1,0 +1,31 @@
+But de la demande & contexte
+============================
+
+Un groupe a besoin d'un autre fonctionnement que les channels : un « papier » (un avion en papier) passe d'une personne à l'autre, et chacun peut y ajouter une entrée (texte ou dessin) avant de l'envoyer à quelqu'un d'autre.
+
+Proposition technique
+=====================
+
+Deux nouvelles tables, en plus des channels et des messages :
+- papers : id, creator_id, holder_id (la personne qui a le papier en main), status (unread, read, discarded), seed (entier aléatoire), updated_at
+- paper_entries : id, paper_id, author_id, text, strokes (JSONB, facultatif, réservé au dessin), created_at
+
+Endpoints :
+    POST /papers               { recipient_id, text, strokes? }   crée le papier et sa première entrée
+    POST /papers/{id}/reply    { recipient_id, text, strokes? }   ajoute une entrée et envoie le papier à recipient_id
+    GET /papers                les papiers que je détiens (ma pile), avec leurs entrées
+    POST /papers/{id}/read     marque le papier comme lu
+    DELETE /papers/{id}        jette le papier à la poubelle (suppression logique)
+
+Utilisation approximative
+=========================
+
+GET /papers à chaque ouverture de la pile. Un POST à chaque envoi ou réponse.
+
+Problèmes potentiels et/ou effets secondaires
+=============================================
+
+- Ces tables viennent en plus des channels et des messages, que les autres groupes utilisent.
+- À préciser : seule la personne qui a le papier en main peut y répondre, le marquer comme lu ou le jeter (403 pour les autres) ?
+- À préciser : quand le papier change de main, son statut repasse-t-il à unread ?
+- Taille des dessins : prévoir une limite sur strokes.

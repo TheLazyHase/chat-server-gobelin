@@ -1,0 +1,23 @@
+But de la demande & contexte
+============================
+
+Beaucoup de groupes ont besoin d'envoyer des fichiers de différents formats (images, vidéos, etc.), par exemple une photo de profil ou une image dans un message.
+
+Proposition technique
+=====================
+
+- POST /files (envoi en multipart/form-data) renvoie { "id": 7, "url": "/files/7" }.
+- GET /files/{id} renvoie le fichier.
+- L'URL obtenue peut ensuite être utilisée dans un message ou dans les métadonnées (par exemple photo_url).
+
+Utilisation approximative
+=========================
+
+Variable selon les groupes : rare pour les photos de profil, plus fréquent pour les images dans les messages.
+
+Problèmes potentiels et/ou effets secondaires
+=============================================
+
+- Espace disque : prévoir une taille maximale par fichier et un stockage persistant (volume Docker).
+- Sécurité : limiter les types de fichiers acceptés.
+- Fichiers orphelins : un fichier envoyé mais jamais utilisé reste stocké.

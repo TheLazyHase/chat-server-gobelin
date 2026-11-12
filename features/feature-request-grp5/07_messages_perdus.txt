@@ -1,0 +1,26 @@
+But de la demande & contexte
+============================
+
+Certains groupes ont besoin que les messages n'aient pas 100 % de chances d'arriver à leur destinataire, et de pouvoir l'indiquer côté front.
+
+Proposition technique
+=====================
+
+- Un paramètre facultatif "loss_chance" (de 0 à 1) sur POST /channel/message.
+- Le tirage se fait côté serveur, pour éviter la triche.
+- Un statut sur chaque message : "in_transit" (en route), "delivered" (arrivé) ou "lost" (perdu).
+- Un message perdu n'est jamais livré au destinataire. L'expéditeur voit le statut "lost", au plus tôt à la date prévue d'arrivée.
+
+Exemple : { "channel": 3, "content": "...", "delay_seconds": 600, "loss_chance": 0.2 }
+
+Utilisation approximative
+=========================
+
+À chaque envoi de message, pour les groupes qui l'utilisent.
+
+Problèmes potentiels et/ou effets secondaires
+=============================================
+
+- À trancher : le destinataire doit-il savoir qu'un message s'est perdu ?
+- Pour un message visible par tout le channel, il est perdu pour tout le monde.
+- Fonctionne mieux avec la demande sur le délai de réception.

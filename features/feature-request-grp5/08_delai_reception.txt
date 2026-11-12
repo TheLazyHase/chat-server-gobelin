@@ -1,0 +1,26 @@
+But de la demande & contexte
+============================
+
+Dans certains concepts, les messages ne doivent pas arriver instantanément mais après un délai. Ce délai doit être géré par le back : sinon, le contenu du message est visible dans les requêtes avant l'heure prévue.
+
+Proposition technique
+=====================
+
+- Un paramètre facultatif "delay_seconds" sur POST /channel/message. Le serveur calcule deliver_at = heure d'envoi + délai.
+- GET /channel/message renvoie l'heure d'envoi (creation_date) et l'heure d'arrivée prévue (deliver_at) de chaque message.
+- Tant que deliver_at n'est pas passé, le destinataire voit qu'un message arrive et à quelle heure, mais content vaut null. L'expéditeur voit ses messages en route.
+
+Exemple de réponse pour le destinataire :
+  { "id": 5, "user_id": 1, "creation_date": "...", "deliver_at": "...", "content": null, "status": "in_transit" }
+
+Utilisation approximative
+=========================
+
+À chaque envoi de message, et à chaque lecture des messages.
+
+Problèmes potentiels et/ou effets secondaires
+=============================================
+
+- Le contenu doit être masqué dans la requête SQL elle-même, pour qu'il ne sorte jamais de la base avant l'heure.
+- L'horloge du navigateur peut être décalée : le front doit se fier à l'heure du serveur.
+- Avec le WebSocket, il faudrait envoyer l'événement au moment de l'arrivée, pas de l'envoi.

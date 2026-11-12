@@ -1,0 +1,31 @@
+But de la demande & contexte
+============================
+
+Nous avons besoin de droits différents selon les utilisateurs. Un admin gère les utilisateurs, crée les channels, y invite des élèves ou les en retire. Les élèves rejoignent les channels auxquels ils ont accès et échangent entre eux.
+
+Dans le même esprit, l'inscription (POST /user) est ouverte à tout le monde, alors que la liste de la classe est fixe.
+
+Proposition technique
+=====================
+
+- Un rôle sur chaque utilisateur (admin ou student), et un propriétaire (owner_id) sur chaque channel.
+- Seul un admin peut créer un channel, inviter quelqu'un ou retirer un membre. Pour les autres, réponse 403.
+- Un channel peut être public (tout le monde peut le rejoindre) ou privé (sur invitation).
+- Exemples de routes :
+    POST /channel           { "name": "Ecni 2028", "private": true }   réservé aux admins
+    POST /channel/invite    { "channel": 3, "user": 12 }
+    DELETE /channel/member?channel=3&user=12
+- Un réglage pour fermer l'inscription (POST /user) ou la réserver à un admin.
+
+Utilisation approximative
+=========================
+
+Rare : création de channels et gestion de la classe. Le rôle est vérifié à chaque requête concernée.
+
+Problèmes potentiels et/ou effets secondaires
+=============================================
+
+- Si le serveur est partagé entre tous les groupes : un admin est-il admin de tout le serveur, ou seulement de ses channels ?
+- Fermer l'inscription toucherait tous les groupes : d'où un réglage plutôt qu'une fermeture définitive.
+- Il faut un moyen de désigner le premier admin (variable d'environnement ou directement en base).
+- POST /channel/enter permet aujourd'hui de rejoindre n'importe quel channel : il faudra le bloquer pour les channels privés.

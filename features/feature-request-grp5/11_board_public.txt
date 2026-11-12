@@ -1,0 +1,30 @@
+But de la demande & contexte
+============================
+
+Nous aimerions un board commun à tout le monde, sur lequel on peut écrire et dessiner à des endroits précis, comme sur un tableau, et que tout le monde peut voir, même sans être connecté.
+
+Proposition technique
+=====================
+
+- Chaque élément du board a : id, author_id, text (facultatif), strokes (JSONB, facultatif, pour le dessin), x et y (position), created_at.
+- Des coordonnées entre 0 et 1 (relatives à la taille du board) permettent de l'afficher sur tous les écrans.
+- Format du dessin, commun avec la demande sur les papiers :
+    [{ "points": [[0.12, 0.40], [0.13, 0.42]], "color": "#000000", "width": 2 }]
+- Routes :
+    GET /board              public : tous les éléments
+    POST /board             { "text": "...", "strokes": [...], "x": 0.5, "y": 0.3 }
+    DELETE /board/{id}      réservé à un admin (modération)
+- Avec le WebSocket, chaque nouvel élément est envoyé à tous : { "type": "board.entry", ... }
+
+Utilisation approximative
+=========================
+
+Lecture à chaque affichage du board. Écriture fréquente pendant qu'on dessine : un envoi par trait terminé, pas par point.
+
+Problèmes potentiels et/ou effets secondaires
+=============================================
+
+- À trancher : faut-il être connecté pour écrire et dessiner ? Nous supposons que oui, puisque chaque élément a un auteur.
+- Taille des dessins : prévoir une limite sur strokes.
+- Spam et contenus indésirables : d'où la suppression par un admin.
+- Dépend du WebSocket pour voir les dessins des autres en temps réel.
