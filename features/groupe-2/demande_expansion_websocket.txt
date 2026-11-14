@@ -1,0 +1,18 @@
+But de la demande & contexte
+============================
+
+Dans notre application de chat, on doit pouvoir lister les joueurs connectés, et transmettre leur position 2D en temps réel.
+Proposition technique
+=====================
+
+Mettre en place des websockets
+
+Utilisation approximative
+==========================
+
+Le maximum possible pour avoir un déplacement en temps réel fluide
+
+Probléme potentiels et/ou effets secondaires
+============================================
+
+Surcharge serveur ?

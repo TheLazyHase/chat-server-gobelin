@@ -1,0 +1,20 @@
+But de la demande & contexte
+============================
+
+Nous aimerions potentiellement avoir du texte stylisé mais au niveau de certain mots. Exemple : Avoir du linethrought sur un mot
+Si trop compliqué car rendu différent selon l'app -> pas grave on fera sans
+
+Proposition technique
+=====================
+
+Peut-être à l'upload du message stocker une version "clean" dans le champ classique de l'objet message, puis dans les metadata ou un autre champ stocker une version html custom. Donc en ajoutant dans l'endpoint POST /message un champ dans le body du type custom-text: qui accepterait du html.
+
+Utilisation approximative
+==========================
+
+De temps en temps quand l'utilisateurs envoi certains messages
+
+Probléme potentiels et/ou effets secondaires
+============================================
+
+Collision avec d'autres clients

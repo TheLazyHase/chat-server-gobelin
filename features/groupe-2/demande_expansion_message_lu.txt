@@ -1,0 +1,18 @@
+But de la demande & contexte
+============================
+Nous aimerions pouvoir connaitre qui à réceptionné un message déjà enregistré en db avec un timestamp de réception
+
+Proposition technique
+=====================
+
+Ajouter un enpoint type PUT /message avec dans le body soit l'id en db soit le timestamp d'envoi + le user qui à envoyé
+
+Utilisation approximative
+==========================
+
+1 fois par échange
+
+Probléme potentiels et/ou effets secondaires
+============================================
+
+

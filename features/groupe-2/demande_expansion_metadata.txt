@@ -1,0 +1,19 @@
+But de la demande & contexte
+============================
+
+Dans notre application de chat, on doit pouvoir personnaliser le rendu de text coté client et donc pouvoir stocker des informations comme des couleurs, des effets de style etc...
+
+Proposition technique
+=====================
+
+Ajouter un champ "metadata" dans l'objet message (et pourquoi pas sur tous les objets users/channels etc...)
+
+Utilisation approximative
+==========================
+
+A chaque requête sur l'objet, dès que ces infos sont nécessaires
+
+Probléme potentiels et/ou effets secondaires
+============================================
+
+
